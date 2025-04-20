@@ -1,0 +1,2843 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>직원 관리 정보</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Supabase JS 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 직접 만든 Supabase 연결 스크립트 추가 -->
+    <script src="supabase.js"></script>
+  </head>
+
+  <body>
+    <!-- 로딩 오버레이 -->
+    <div id="loadingOverlay">
+      <div class="loader"></div>
+      <div>데이터를 처리중입니다...</div>
+    </div>
+
+    <div class="container" id="mainContainer">
+      <div class="header" id="headerSection">
+        <div class="title" id="pageTitle">우리집 데이케어 센터 직원 관리</div>
+      </div>
+
+      <div class="button-group" id="mainButtonGroup">
+        <div class="search-area">
+          <div class="reference-date-container">
+            <input
+              type="date"
+              class="reference-date-input"
+              name="referenceDate"
+              id="referenceDate"
+            />
+          </div>
+          <button class="btn search-button" id="activeEmployeeBtn">
+            재직직원 조회
+          </button>
+          <button class="btn search-button" id="allEmployeeBtn">
+            전직원 조회
+          </button>
+        </div>
+        <button class="btn" id="newEmployeeBtn">신규직원등록</button>
+      </div>
+
+      <div class="content-wrapper" id="contentArea">
+        <div class="employee-list" id="employeeListContainer">
+          <h3 class="employee-list-title" id="employeeListTitle">직원 목록</h3>
+          <div class="table-container">
+            <table id="employeeTable">
+              <thead>
+                <tr>
+                  <th data-sort="employeeId">직원번호</th>
+                  <th data-sort="name">직원명</th>
+                  <th data-sort="jobType">담당직종</th>
+                  <th data-sort="mobile">휴대전화번호</th>
+                  <th data-sort="startDate">계약시작일</th>
+                  <th data-sort="endDate">계약종료일</th>
+                </tr>
+              </thead>
+              <tbody id="employeeTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="employee-form-container" id="employeeFormWrapper">
+          <form id="employeeForm">
+            <div class="info-frame_main" id="basicInfoFrame">
+              <h3 class="info-section-title" id="basicInfoTitle">기본 정보</h3>
+              <div class="row-2col">
+                <div class="col-2">
+                  <label class="form-label">직원번호</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    name="employeeId"
+                    id="employeeId"
+                    readonly
+                  />
+                </div>
+                <div class="col-2">
+                  <label class="form-label">직원명</label>
+                  <input type="text" class="form-input" name="name" id="name" />
+                </div>
+              </div>
+
+              <div class="row-3col">
+                <div class="col-3">
+                  <label class="form-label">주민등록번호</label>
+                  <input
+                    type="text"
+                    class="form-input ssn-input"
+                    name="ssn"
+                    id="ssn"
+                  />
+                </div>
+                <div class="col-3">
+                  <label class="form-label">생년월일</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    name="birthdate"
+                    id="birthdate"
+                    placeholder="ex)20250101"
+                  />
+                </div>
+                <div class="col-3">
+                  <label class="form-label">(만)나이</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    name="age"
+                    id="age"
+                    readonly
+                  />
+                </div>
+              </div>
+
+              <div class="row-2col">
+                <div class="col-2">
+                  <label class="form-label">주소</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    name="address"
+                    id="address"
+                  />
+                </div>
+                <div class="col-2">
+                  <label class="form-label">이메일주소</label>
+                  <input
+                    type="email"
+                    class="form-input"
+                    name="email"
+                    id="email"
+                  />
+                </div>
+              </div>
+
+              <div class="row-3col">
+                <div class="col-3">
+                  <label class="form-label">휴대전화번호</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    name="mobile"
+                    id="mobile"
+                  />
+                </div>
+                <div class="col-3">
+                  <label class="form-label">전화번호</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    name="phone"
+                    id="phone"
+                  />
+                </div>
+                <div class="col-3">
+                  <label class="form-label">비상연락망</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    name="emergency"
+                    id="emergency"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-buttons" id="formTabButtons">
+              <button
+                type="button"
+                class="tab-button active"
+                data-tab="contract"
+                id="contractTabBtn"
+              >
+                계약사항
+              </button>
+              <button
+                type="button"
+                class="tab-button"
+                data-tab="duty"
+                id="dutyTabBtn"
+              >
+                의무사항
+              </button>
+              <button
+                type="button"
+                class="tab-button"
+                data-tab="account"
+                id="accountTabBtn"
+              >
+                계좌사항
+              </button>
+              <button
+                type="button"
+                class="tab-button"
+                data-tab="qualification"
+                id="qualificationTabBtn"
+              >
+                자격사항
+              </button>
+            </div>
+
+            <div id="contract" class="tab-content active">
+              <div class="info-frame_additional" id="contractInfoFrame">
+                <div class="row-2col">
+                  <div class="col-2">
+                    <label class="form-label">근무구분</label>
+                    <select class="form-input" name="workType" id="workType">
+                      <option value="선택">선택</option>
+                      <option value="정규직">정규직</option>
+                      <option value="계약직">계약직</option>
+                      <option value="일용직">일용직</option>
+                      <option value="시간강사">시간강사</option>
+                      <option value="기타프리랜서">기타프리랜서</option>
+                      <option value="자원봉사자">자원봉사자</option>
+                      </select>
+                  </div>
+                  <div class="col-2">
+                    <label class="form-label">담당직종</label>
+                    <select class="form-input" name="position" id="position">
+                      <option value="선택">선택</option>
+                      <option value="시설장">시설장</option>
+                      <option value="사무국장">사무국장</option>
+                      <option value="사회복지사">사회복지사</option>
+                      <option value="작업치료사">작업치료사</option>
+                      <option value="물리치료사">물리치료사</option>
+                      <option value="요양보호사">요양보호사</option>
+                      <option value="조리원">조리원</option>
+                      <option value="운전원">운전원</option>
+                      <option value="사무원">사무원</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row-3col">
+                  <div class="col-3">
+                    <label class="form-label">계약일</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="contractDate"
+                      id="contractDate"
+                      placeholder="ex)20250101"
+                    />
+                  </div>
+                  <div class="col-3">
+                    <label class="form-label">계약시작일</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="contractStart"
+                      id="contractStart"
+                      placeholder="ex)20250101"
+                    />
+                  </div>
+                  <div class="col-3">
+                    <label class="form-label">계약종료일</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="contractEnd"
+                      id="contractEnd"
+                      value="99991231"
+                      placeholder="ex)99991231"
+                    />
+                  </div>
+                </div>
+
+                <div class="row-3col">
+                  <div class="col-3">
+                    <label class="form-label">근무시작시간</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="workStart"
+                      id="workStart"
+                      placeholder="ex)0900"
+                    />
+                  </div>
+                  <div class="col-3">
+                    <label class="form-label">근무종료시간</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="workEnd"
+                      id="workEnd"
+                      placeholder="ex)1800"
+                    />
+                  </div>
+                  <div class="col-3">
+                    <label class="form-label">휴게시간</label>
+                    <select class="form-input" name="breakTime" id="breakTime">
+                      <option value="0H">0H</option>
+                      <option value="0.5H">0.5H</option>
+                      <option value="1H">1H</option>
+                      <option value="1.5H">1.5H</option>
+                      <option value="2H">2H</option>
+                      <option value="2.5H">2.5H</option>
+                      <option value="3H">3H</option>
+                      <option value="3.5H">3.5H</option>
+                      <option value="4H">4H</option>
+                      <option value="4.5H">4.5H</option>
+                      <option value="5H">5H</option>
+                      <option value="5.5H">5.5H</option>
+                      <option value="6H">6H</option>
+                    </select>
+                  </div>
+                  <div class="col-3">
+                    <label class="form-label">일일근무시간</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="dailyHours"
+                      id="dailyHours"
+                      readonly
+                    />
+                  </div>
+                </div>
+
+                <div class="row-2col">
+                  <div class="col-2">
+                    <label class="form-label">근무요일</label>
+                    <div class="workdays-checkbox-container">
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="월"
+                          class="workday-checkbox"
+                          checked
+                        />
+                        월
+                      </label>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="화"
+                          class="workday-checkbox"
+                          checked
+                        />
+                        화
+                      </label>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="수"
+                          class="workday-checkbox"
+                          checked
+                        />
+                        수
+                      </label>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="목"
+                          class="workday-checkbox"
+                          checked
+                        />
+                        목
+                      </label>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="금"
+                          class="workday-checkbox"
+                          checked
+                        />
+                        금
+                      </label>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="토"
+                          class="workday-checkbox"
+                        />
+                        토
+                      </label>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="일"
+                          class="workday-checkbox"
+                        />
+                        일
+                      </label>
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="workDays"
+                          value="해당없음"
+                          class="workday-checkbox"
+                          id="workdayNone"
+                        />
+                        해당없음
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row-1col">
+                  <div class="col-1" style="width: 100%">
+                    <label class="form-label">기타근무유형(상세기재)</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="otherWorkType"
+                      id="otherWorkType"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="duty" class="tab-content">
+              <div class="info-frame_additional" id="dutyInfoFrame">
+                <div class="row-2col">
+                  <div class="col-2">
+                    <label class="form-label">건강검진일</label>
+                    <input
+                      type="date"
+                      class="form-input"
+                      name="health_checkup_date"
+                      id="health_checkup_date"
+                    />
+                  </div>
+                  <div class="col-2">
+                    <label class="form-label">범죄경력조회일</label>
+                    <input
+                      type="date"
+                      class="form-input"
+                      name="criminal_record_check_date"
+                      id="criminal_record_check_date"
+                    />
+                  </div>
+                </div>
+
+                <div class="row-2col">
+                  <div class="col-3">
+                    <label class="form-label">치매교육이수일</label>
+                    <input
+                      type="date"
+                      class="form-input"
+                      name="dementia_training_date"
+                      id="dementia_training_date"
+                    />
+                  </div>
+                  <div class="col-3">
+                    <!-- 빈 공간 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="account" class="tab-content">
+              <div class="info-frame_additional" id="accountInfoFrame">
+                <div class="row-3col">
+                  <div class="col-3">
+                    <label class="form-label">계좌번호</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="bank_account"
+                      id="bankAccount"
+                      placeholder="'-' 없이 입력"
+                    />
+                  </div>
+                  <div class="col-3">
+                    <label class="form-label">계좌은행</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="bank_name"
+                      id="bankName"
+                    />
+                  </div>
+                  <div class="col-3">
+                    <label class="form-label">예금주</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      name="account_holder"
+                      id="accountHolder"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="qualification" class="tab-content">
+              <div class="info-frame_additional" id="qualificationInfoFrame">
+                <div class="table-container">
+                  <table class="qualification-table" id="qualificationTable">
+                    <thead>
+                      <tr>
+                        <th>자격증명</th>
+                        <th>자격번호</th>
+                        <th>자격증취득일</th>
+                        <th>자격증만료일</th>
+                        <th>자격증발행처</th>
+                        <th>관리</th>
+                      </tr>
+                    </thead>
+                    <tbody id="qualificationList">
+                      <tr id="qualificationInputRow">
+                        <td>
+                          <input
+                            type="text"
+                            class="form-input"
+                            name="cert_name"
+                            id="certName"
+                            placeholder="자격증명"
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            class="form-input"
+                            name="cert_number"
+                            id="certNumber"
+                            placeholder="자격번호"
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            class="form-input"
+                            name="cert_date"
+                            id="certDate"
+                            placeholder="ex)20250101"
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            class="form-input"
+                            name="cert_expiry_date"
+                            id="certExpiryDate"
+                            placeholder="ex)99991231"
+                          />
+                        </td>
+                        <td>
+                          <input
+                            class="form-input"
+                            name="cert_issuer"
+                            id="certIssuer"
+                            placeholder="발행처"
+                            type="text"
+                          />
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            class="btn"
+                            id="saveQualificationBtn"
+                          >
+                            저장
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-button-group" id="formButtonGroup">
+              <button type="button" class="btn" id="resetBtn">초기화</button>
+              <button type="button" class="btn" id="submitBtn">입력</button>
+              <button type="button" class="btn" id="editBtn">수정</button>
+              <button type="button" class="btn" id="deleteBtn">삭제</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 모달 컴포넌트 -->
+    <div class="modal-overlay" id="customModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title">알림</div>
+          <div class="modal-close">&times;</div>
+        </div>
+        <div class="modal-body" id="modalMessage">
+          <!-- 메시지 내용이 여기에 들어갑니다 -->
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn" id="modalConfirmBtn">확인</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 확인 모달 추가 -->
+    <div class="modal-overlay" id="confirmModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title">확인</div>
+          <div class="modal-close">&times;</div>
+        </div>
+        <div class="modal-body" id="confirmModalMessage">
+          <!-- 메시지 내용이 여기에 들어갑니다 -->
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn" id="confirmYesBtn">확인</button>
+          <button class="modal-btn cancel-btn" id="confirmNoBtn">취소</button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+      
+    // 전역 변수
+    let employeeData = []; // 직원 데이터 저장
+    let certData = []; // 자격증 데이터 저장
+
+    // 로딩 화면 표시/숨김 함수
+    function showLoading() {
+      document.getElementById("loadingOverlay").style.display = "flex";
+    }
+
+    function hideLoading() {
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
+
+    // 모달 관련 함수
+    function openModal(modalId) {
+      const modalElement = document.getElementById(modalId);
+      if (modalElement) {
+        modalElement.style.display = "flex";
+      } else {
+        console.error(`모달 요소를 찾을 수 없습니다: ${modalId}`);
+      }
+    }
+
+    function closeModal(modalId) {
+      const modalElement = document.getElementById(modalId);
+      if (modalElement) {
+        modalElement.style.display = "none";
+      } else {
+        console.error(`모달 요소를 찾을 수 없습니다: ${modalId}`);
+      }
+    }
+
+    // 알림 모달 표시 함수
+    function showAlert(message) {
+      document.getElementById("modalMessage").textContent = message;
+      openModal("customModal");
+    }
+
+    // 전역 함수로 등록
+    window.showAlert = showAlert;
+
+    // 확인 모달 표시 함수 (콜백 함수 사용)
+    function showConfirm(message, yesCallback, noCallback) {
+      // 콜백 함수 저장
+      currentYesCallback = yesCallback;
+      currentNoCallback = noCallback;
+
+      // 메시지 설정
+      document.getElementById("confirmModalMessage").textContent = message;
+      
+      // 모달 표시
+      openModal("confirmModal");
+    }
+
+    // 페이지 로드 시 실행되는 초기화 함수
+    async function initializeData() {
+      showLoading();
+      try {
+        // Supabase 초기화 (추가)
+        initSupabase();
+        
+        // 모든 데이터 로드
+        await loadAllData();
+        
+        // 자격증 데이터 로드 추가
+        await loadCertData();
+        
+        // 현재 날짜를 기준일자로 설정
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        document.getElementById("referenceDate").value = dateStr;
+        
+        // 재직 중인 직원 테이블 표시
+        table_CurrentEmployee();
+        
+      } catch (error) {
+        console.error("초기화 중 오류 발생:", error);
+        showAlert("데이터 로드 중 오류가 발생했습니다.");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // 모든 데이터 로드
+    async function loadAllData() {
+      return new Promise(async (resolve, reject) => {
+        showLoading(); // 로딩 표시 시작
+        try {
+          // Supabase 함수 호출
+          const allData = await getData_All();
+          storedData_all = allData;
+          console.log(allData);
+          hideLoading(); // 로딩 표시 종료
+          resolve(allData); // Promise 해결
+        } catch (error) {
+          console.log("데이터 로드 실패!", error);
+          hideLoading(); // 로딩 표시 종료 (에러 시에도)
+          reject(error); // Promise 거부
+        }
+      });
+    }
+
+    
+
+    // (구분)직원 데이터 이동 함수 정의
+    function move_EmployeeLineData() {
+      // Promise를 반환하도록 구현
+      return new Promise((resolve, reject) => {
+        // 직원등록_ID 사용
+        const employeeId = selectedMemberId;
+
+        if (!employeeId) {
+          showAlert("직원등록_ID가 없습니다. 직원을 먼저 선택해주세요.");
+          reject("직원등록_ID가 없습니다.");
+          return;
+        }
+
+        // 로딩 표시 시작
+        showLoading();
+        
+        // Supabase 함수 호출
+        move_EmployeeLine(employeeId)
+          .then(result => {
+            hideLoading(); // 로딩 표시 종료
+            
+            if (result.success) {
+              resolve(result);
+            } else {
+              showAlert(result.message);
+              reject(result.message);
+            }
+          })
+          .catch(error => {
+            hideLoading(); // 로딩 표시 종료
+            showAlert("직원 데이터 이동 중 오류가 발생했습니다: " + error);
+            reject(error);
+          });
+      });
+    }
+
+    // 자격증 데이터 추가 함수
+    async function add_CertData() {
+      try {
+        // 자격증 입력 필드에서 데이터 수집
+        const formData = {
+          employeeId: document.getElementById("employeeId").value,
+          employeeName: document.getElementById("name").value,
+          certName: document.getElementById("certName").value,
+          certNumber: document.getElementById("certNumber").value,
+          certDate: document.getElementById("certDate").value,
+          certExpiryDate: document.getElementById("certExpiryDate").value,
+          certIssuer: document.getElementById("certIssuer").value,
+        };
+        
+        // 필수 필드 검증
+        if (!formData.certName) {
+          return { success: false, message: "자격증명을 입력해주세요." };
+        }
+        
+        // Supabase 함수를 사용하여 자격증 데이터 처리
+        const result = await processCertFormData(formData);
+        
+        if (result.success) {
+          // 성공 시 자격증 테이블 업데이트
+          await loadCertData();
+          updateCertTable();
+          
+          // 입력 필드 초기화
+          document.getElementById("certName").value = "";
+          document.getElementById("certNumber").value = "";
+          document.getElementById("certDate").value = "";
+          document.getElementById("certExpiryDate").value = "";
+          document.getElementById("certIssuer").value = "";
+          
+          return { success: true, message: result.message };
+        } else {
+          return { success: false, message: result.message };
+        }
+      } catch (error) {
+        console.error("자격증 데이터 저장 중 오류 발생:", error);
+        return { success: false, message: "자격증 데이터 저장 중 오류가 발생했습니다: " + error };
+      }
+    }
+
+    // 자격증 데이터만 다시 로드
+    async function loadCertData() {
+      return new Promise(async (resolve, reject) => {
+        showLoading(); // 로딩 표시 시작
+        try {
+          // Supabase 함수 호출
+          const certData = await getData_Cert();
+          storedData_cert = certData;
+          console.log("자격증 데이터 로드 완료:", storedData_cert); // 로그 추가
+          hideLoading(); // 로딩 표시 종료
+          resolve(certData); // Promise 해결
+        } catch (error) {
+          console.log("자격증 데이터 로드 실패!", error);
+          hideLoading(); // 로딩 표시 종료 (에러 시에도)
+          reject(error); // Promise 거부
+        }
+      });
+    }
+
+    // 자격증 삭제 함수 (Promise 반환)
+    function deleteCertData(certId) {
+      return new Promise((resolve, reject) => {
+        showLoading(); // 로딩 표시
+
+        // supabase.js의 deleteCertData 함수 호출
+        deleteCertData_Supabase(certId)
+          .then(result => {
+            hideLoading(); // 로딩 표시 종료
+
+            if (result.success) {
+              resolve(result); // Promise 성공 처리
+            } else {
+              showAlert(result.message);
+              reject(result.message); // Promise 실패 처리
+            }
+          })
+          .catch(error => {
+            hideLoading(); // 로딩 표시 종료
+            showAlert("자격증 삭제 중 오류가 발생했습니다: " + error);
+            reject(error); // Promise 실패 처리
+          });
+      });
+    }
+
+    // 테이블 정렬 기능 추가
+    let currentSortColumn = "employeeId"; // 기본 정렬 열
+    let sortDirection = "asc"; // 기본 정렬 방향 (오름차순)
+
+    // 정렬 함수
+    function sortTable(column) {
+      // 같은 열을 다시 클릭하면 정렬 방향 전환
+      if (currentSortColumn === column) {
+        sortDirection = sortDirection === "asc" ? "desc" : "asc";
+      } else {
+        currentSortColumn = column;
+        sortDirection = "asc";
+      }
+
+      // 현재 표시 중인 테이블 데이터 다시 정렬하고 표시
+      if (document.getElementById("employeeListTitle").textContent.includes("재직")) {
+        table_CurrentEmployee();
+      } else {
+        table_AllEmployee();
+      }
+    }
+
+    function table_CurrentEmployee() {
+      // 먼저 데이터 로드가 완료되었는지 확인
+      if (!storedData_all || storedData_all.length === 0) {
+        console.log("데이터가 로드되지 않았습니다.");
+        showAlert("데이터가 로드되지 않았습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      const tableBody = document.getElementById("employeeTableBody");
+      let referenceDate = document.getElementById("referenceDate").value;
+
+      // referenceDate가 없으면 오늘 날짜 사용
+      if (!referenceDate) {
+        referenceDate = new Date().toISOString().split("T")[0];
+        document.getElementById("referenceDate").value = referenceDate;
+      }
+
+      // 날짜 형식 변환 (YYYY-MM-DD -> YYYYMMDD)
+      const formattedRefDate = referenceDate.replace(/-/g, "");
+      const refDateNum = parseInt(formattedRefDate);
+
+      console.log("기준일:", formattedRefDate, "숫자:", refDateNum);
+      console.log("테이블 데이터 시작...");
+
+      // 테이블 초기화
+      tableBody.innerHTML = "";
+
+      // 데이터 및 필터링 디버깅
+      console.log("전체 데이터 개수:", storedData_all.length);
+      console.log("첫 번째 데이터 항목:", storedData_all[0]);
+
+      // 조건에 맞는 직원만 필터링하여 배열에 저장
+      const filteredEmployees = storedData_all.filter(row => {
+        // contractStart와 contractEnd가 이미 숫자형식이거나 문자열 형식인지 확인
+        let startDateNum, endDateNum;
+        
+        // Supabase 데이터의 필드명이 한글로 되어있음 (계약시작일, 계약종료일)
+        // 1. 이미 숫자인 경우
+        if (typeof row.계약시작일 === 'number') {
+          startDateNum = row.계약시작일;
+        } 
+        // 2. 문자열인 경우 (YYYY-MM-DD 형식)
+        else if (row.계약시작일 && String(row.계약시작일).includes('-')) {
+          startDateNum = parseInt(String(row.계약시작일).replace(/-/g, ""));
+        } 
+        // 3. 문자열이지만 이미 숫자 형식인 경우 (YYYYMMDD 형식)
+        else if (row.계약시작일) {
+          startDateNum = parseInt(row.계약시작일);
+        }
+        else {
+          startDateNum = 0;
+        }
+        
+        // 계약 종료일 처리
+        if (typeof row.계약종료일 === 'number') {
+          endDateNum = row.계약종료일;
+        } 
+        else if (row.계약종료일 && String(row.계약종료일).includes('-')) {
+          endDateNum = parseInt(String(row.계약종료일).replace(/-/g, ""));
+        } 
+        else if (row.계약종료일) {
+          endDateNum = parseInt(row.계약종료일);
+        }
+        else {
+          endDateNum = 99991231; // 아주 먼 미래 날짜
+        }
+        
+        console.log(`직원 ${row.직원명 || 'N/A'}: 시작=${startDateNum}, 종료=${endDateNum}, 기준=${refDateNum}`);
+        
+        // 기준일이 계약시작일보다 크거나 같고, 계약종료일보다 작은 경우에만 표시
+        return refDateNum >= startDateNum && refDateNum < endDateNum;
+      });
+
+      console.log("필터링 후 직원 수:", filteredEmployees.length);
+      
+      // 선택된 열과 방향에 따라 정렬
+      filteredEmployees.sort((a, b) => {
+        let valueA, valueB;
+
+        switch(currentSortColumn) {
+          case 'employeeId':
+            valueA = a.직원번호 || '';
+            valueB = b.직원번호 || '';
+            break;
+          case 'name':
+            valueA = a.직원명 || '';
+            valueB = b.직원명 || '';
+            break;
+          case 'jobType':
+            valueA = a.근무구분 || '';
+            valueB = b.근무구분 || '';
+            break;
+          case 'mobile':
+            valueA = a.휴대전화번호 || '';
+            valueB = b.휴대전화번호 || '';
+            break;
+          case 'startDate':
+            // 시작일 처리
+            if (typeof a.계약시작일 === 'number') {
+              valueA = a.계약시작일;
+            } else if (a.계약시작일 && String(a.계약시작일).includes('-')) {
+              valueA = parseInt(String(a.계약시작일).replace(/-/g, ""));
+            } else {
+              valueA = parseInt(a.계약시작일) || 0;
+            }
+            
+            if (typeof b.계약시작일 === 'number') {
+              valueB = b.계약시작일;
+            } else if (b.계약시작일 && String(b.계약시작일).includes('-')) {
+              valueB = parseInt(String(b.계약시작일).replace(/-/g, ""));
+            } else {
+              valueB = parseInt(b.계약시작일) || 0;
+            }
+            break;
+          case 'endDate':
+            // 종료일 처리
+            if (typeof a.계약종료일 === 'number') {
+              valueA = a.계약종료일;
+            } else if (a.계약종료일 && String(a.계약종료일).includes('-')) {
+              valueA = parseInt(String(a.계약종료일).replace(/-/g, ""));
+            } else {
+              valueA = parseInt(a.계약종료일) || 0;
+            }
+            
+            if (typeof b.계약종료일 === 'number') {
+              valueB = b.계약종료일;
+            } else if (b.계약종료일 && String(b.계약종료일).includes('-')) {
+              valueB = parseInt(String(b.계약종료일).replace(/-/g, ""));
+            } else {
+              valueB = parseInt(b.계약종료일) || 0;
+            }
+            break;
+          default:
+            valueA = a.직원번호 || '';
+            valueB = b.직원번호 || '';
+        }
+
+        // 문자열인 경우 대소문자 구분 없이 비교
+        if (typeof valueA === 'string' && typeof valueB === 'string') {
+          valueA = valueA.toLowerCase();
+          valueB = valueB.toLowerCase();
+        }
+
+        // 정렬 방향에 따라 비교
+        if (sortDirection === 'asc') {
+          return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+        } else {
+          return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+        }
+      });
+
+      // 정렬된 데이터를 테이블에 추가
+      filteredEmployees.forEach((row) => {
+        const employeeNo = row.직원번호; 
+        const employeeName = row.직원명;
+        const jobType = row.담당직종;
+        const mobile = row.휴대전화번호;
+        
+        // 날짜 데이터 포맷팅 (숫자 -> YYYY-MM-DD)
+        let contractStartDate, contractEndDate;
+        
+        if (typeof row.계약시작일 === 'number') {
+          const startStr = row.계약시작일.toString();
+          contractStartDate = `${startStr.substring(0, 4)}-${startStr.substring(4, 6)}-${startStr.substring(6, 8)}`;
+        } else {
+          contractStartDate = row.계약시작일 || "";
+        }
+        
+        if (typeof row.계약종료일 === 'number') {
+          const endStr = row.계약종료일.toString();
+          contractEndDate = `${endStr.substring(0, 4)}-${endStr.substring(4, 6)}-${endStr.substring(6, 8)}`;
+        } else {
+          contractEndDate = row.계약종료일 || "";
+        }
+
+        console.log(
+          `테이블 추가 - 직원 ${employeeName}: 시작일=${contractStartDate}, 종료일=${contractEndDate}`
+        );
+
+        // 새로운 행 생성
+        const newRow = document.createElement("tr");
+        // 행에 셀 추가
+        newRow.innerHTML = `
+            <td>${employeeNo || ""}</td>
+            <td>${employeeName || ""}</td>
+            <td>${jobType || ""}</td>
+            <td>${mobile || ""}</td>
+            <td>${contractStartDate || ""}</td>
+            <td>${contractEndDate || ""}</td>
+          `;
+
+        // 테이블에 행 추가
+        tableBody.appendChild(newRow);
+
+        // 행 더블클릭 이벤트 추가
+        newRow.addEventListener("dblclick", function () {
+          // 선택된 행 하이라이트 처리
+          const allRows = tableBody.querySelectorAll("tr");
+          allRows.forEach((r) => r.classList.remove("selected-row"));
+          newRow.classList.add("selected-row");
+
+          // 수정 버튼과 삭제 버튼 활성화, 입력 버튼 비활성화
+          document.getElementById("editBtn").disabled = false;
+          document.getElementById("deleteBtn").disabled = false;
+          document.getElementById("submitBtn").disabled = true;
+
+          // 선택된 직원 ID 저장
+          selectedMemberId = row.직원등록_id; 
+
+          // 데이터를 각 탭에 표시
+          fillEmployeeData(row);
+        });
+      });
+
+      // 테이블 제목 업데이트
+      document.getElementById("employeeListTitle").textContent = "재직 직원 목록";
+      console.log("테이블 데이터 처리 완료");
+    }
+
+    function table_AllEmployee() {
+      // 먼저 데이터 로드가 완료되었는지 확인
+      if (!storedData_all || storedData_all.length === 0) {
+        console.log("데이터가 로드되지 않았습니다.");
+        showAlert("데이터가 로드되지 않았습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      const tableBody = document.getElementById("employeeTableBody");
+      console.log("전체 직원 데이터 시작...");
+
+      // 테이블 초기화
+      tableBody.innerHTML = "";
+
+      // 데이터 복사
+      const allEmployees = [...storedData_all];
+      
+      // 선택된 열과 방향에 따라 정렬
+      allEmployees.sort((a, b) => {
+        let valueA, valueB;
+
+        switch(currentSortColumn) {
+          case 'employeeId':
+            valueA = a.직원번호 || '';
+            valueB = b.직원번호 || '';
+            break;
+          case 'name':
+            valueA = a.직원명 || '';
+            valueB = b.직원명 || '';
+            break;
+          case 'jobType':
+            valueA = a.근무구분 || '';
+            valueB = b.근무구분 || '';
+            break;
+          case 'mobile':
+            valueA = a.휴대전화번호 || '';
+            valueB = b.휴대전화번호 || '';
+            break;
+          case 'startDate':
+            // 시작일 처리
+            if (typeof a.계약시작일 === 'number') {
+              valueA = a.계약시작일;
+            } else if (a.계약시작일 && String(a.계약시작일).includes('-')) {
+              valueA = parseInt(String(a.계약시작일).replace(/-/g, ""));
+            } else {
+              valueA = parseInt(a.계약시작일) || 0;
+            }
+            
+            if (typeof b.계약시작일 === 'number') {
+              valueB = b.계약시작일;
+            } else if (b.계약시작일 && String(b.계약시작일).includes('-')) {
+              valueB = parseInt(String(b.계약시작일).replace(/-/g, ""));
+            } else {
+              valueB = parseInt(b.계약시작일) || 0;
+            }
+            break;
+          case 'endDate':
+            // 종료일 처리
+            if (typeof a.계약종료일 === 'number') {
+              valueA = a.계약종료일;
+            } else if (a.계약종료일 && String(a.계약종료일).includes('-')) {
+              valueA = parseInt(String(a.계약종료일).replace(/-/g, ""));
+            } else {
+              valueA = parseInt(a.계약종료일) || 0;
+            }
+            
+            if (typeof b.계약종료일 === 'number') {
+              valueB = b.계약종료일;
+            } else if (b.계약종료일 && String(b.계약종료일).includes('-')) {
+              valueB = parseInt(String(b.계약종료일).replace(/-/g, ""));
+            } else {
+              valueB = parseInt(b.계약종료일) || 0;
+            }
+            break;
+          default:
+            valueA = a.직원번호 || '';
+            valueB = b.직원번호 || '';
+        }
+
+        // 문자열인 경우 대소문자 구분 없이 비교
+        if (typeof valueA === 'string' && typeof valueB === 'string') {
+          valueA = valueA.toLowerCase();
+          valueB = valueB.toLowerCase();
+        }
+
+        // 정렬 방향에 따라 비교
+        if (sortDirection === 'asc') {
+          return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+        } else {
+          return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+        }
+      });
+
+      // 정렬된 데이터를 테이블에 추가
+      allEmployees.forEach((row) => {
+        const employeeNo = row.직원번호;
+        const employeeName = row.직원명;
+        const jobType = row.담당직종;
+        const mobile = row.휴대전화번호;
+        
+        // 날짜 데이터 포맷팅 (숫자 -> YYYY-MM-DD)
+        let contractStartDate, contractEndDate;
+        
+        if (typeof row.계약시작일 === 'number') {
+          const startStr = row.계약시작일.toString();
+          contractStartDate = `${startStr.substring(0, 4)}-${startStr.substring(4, 6)}-${startStr.substring(6, 8)}`;
+        } else {
+          contractStartDate = row.계약시작일 || "";
+        }
+        
+        if (typeof row.계약종료일 === 'number') {
+          const endStr = row.계약종료일.toString();
+          contractEndDate = `${endStr.substring(0, 4)}-${endStr.substring(4, 6)}-${endStr.substring(6, 8)}`;
+        } else {
+          contractEndDate = row.계약종료일 || "";
+        }
+
+        // 새로운 행 생성
+        const newRow = document.createElement("tr");
+        // 행에 셀 추가
+        newRow.innerHTML = `
+            <td>${employeeNo || ""}</td>
+            <td>${employeeName || ""}</td>
+            <td>${jobType || ""}</td>
+            <td>${mobile || ""}</td>
+            <td>${contractStartDate || ""}</td>
+            <td>${contractEndDate || ""}</td>
+          `;
+
+        // 행 배경색 설정 (계약 종료된 직원은 회색 배경)
+        const today = new Date();
+        const formattedToday = today.toISOString().split("T")[0].replace(/-/g, "");
+        const todayNum = parseInt(formattedToday);
+        
+        // contractEndDate를 숫자로 변환하여 오늘 날짜와 비교
+        let endDateNum;
+        
+        if (typeof row.계약종료일 === 'number') {
+          endDateNum = row.계약종료일;
+        } else if (row.계약종료일 && String(row.계약종료일).includes('-')) {
+          endDateNum = parseInt(String(row.계약종료일).replace(/-/g, ""));
+        } else if (row.계약종료일) {
+          endDateNum = parseInt(row.계약종료일);
+        } else {
+          endDateNum = 99991231; // 아주 먼 미래 날짜
+        }
+        
+        // 계약이 종료된 직원은 회색 배경
+        if (endDateNum <= todayNum) {
+          newRow.style.backgroundColor = "#f0f0f0";
+        }
+
+        // 테이블에 행 추가
+        tableBody.appendChild(newRow);
+
+        // 행 더블클릭 이벤트 추가
+        newRow.addEventListener("dblclick", function () {
+          // 선택된 행 하이라이트 처리
+          const allRows = tableBody.querySelectorAll("tr");
+          allRows.forEach((r) => r.classList.remove("selected-row"));
+          newRow.classList.add("selected-row");
+
+          // 수정 버튼과 삭제 버튼 활성화, 입력 버튼 비활성화
+          document.getElementById("editBtn").disabled = false;
+          document.getElementById("deleteBtn").disabled = false;
+          document.getElementById("submitBtn").disabled = true;
+          
+          // 선택된 직원 ID 저장
+          selectedMemberId = row.직원등록_id;
+
+          // 데이터를 각 탭에 표시
+          fillEmployeeData(row);
+        });
+      });
+
+      // 테이블 제목 업데이트
+      document.getElementById("employeeListTitle").textContent = "전체 직원 목록";
+      console.log("전체 직원 데이터 처리 완료");
+    }
+
+    // (구분)직원 데이터를 각 탭에 채우는 함수
+    function fillEmployeeData(data) {
+      // 먼저 동기화를 위해 전역 변수에 저장
+      selectedMemberId = data.직원등록_id;
+      selectedMemberData = data;
+
+      // 기본 정보 탭
+      document.getElementById("employeeId").value = data.직원번호 || ""; // 직원번호
+      document.getElementById("name").value = data.직원명 || ""; // 이름
+      document.getElementById("ssn").value = data.주민등록번호 || ""; // 주민등록번호
+      
+      // 생년월일 포맷팅 (숫자 -> YYYY-MM-DD)
+      if (typeof data.생년월일 === 'number') {
+        const birthStr = data.생년월일.toString();
+        document.getElementById("birthdate").value = `${birthStr.substring(0, 4)}-${birthStr.substring(4, 6)}-${birthStr.substring(6, 8)}`;
+      } else {
+        document.getElementById("birthdate").value = data.생년월일 || "";
+      }
+      
+      document.getElementById("age").value = data.만나이 || ""; // 만나이
+      document.getElementById("address").value = data.주소 || ""; // 주소
+      document.getElementById("email").value = data.이메일 || ""; // 이메일
+
+      // 연락처 탭
+      document.getElementById("mobile").value = data.휴대전화번호 || ""; // 휴대전화
+      document.getElementById("phone").value = data.전화번호 || ""; // 일반전화
+      document.getElementById("emergency").value = data.비상연락망 || ""; // 비상연락처
+
+      // 계약내용 탭
+      const workTypeSelect = document.getElementById("workType");
+      if (workTypeSelect) {
+        workTypeSelect.value = data.근무구분 || "";
+      }
+
+      const positionSelect = document.getElementById("position");
+      if (positionSelect) {
+        positionSelect.value = data.담당직종 || "";
+      }
+
+      // 계약일자 포맷팅
+      if (typeof data.계약일 === 'number') {
+        const dateStr = data.계약일.toString();
+        document.getElementById("contractDate").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      } else {
+        document.getElementById("contractDate").value = data.계약일 || "";
+      }
+      
+      // 계약시작일 포맷팅
+      if (typeof data.계약시작일 === 'number') {
+        const startStr = data.계약시작일.toString();
+        document.getElementById("contractStart").value = `${startStr.substring(0, 4)}-${startStr.substring(4, 6)}-${startStr.substring(6, 8)}`;
+      } else {
+        document.getElementById("contractStart").value = data.계약시작일 || "";
+      }
+      
+      // 계약종료일 포맷팅
+      if (typeof data.계약종료일 === 'number') {
+        const endStr = data.계약종료일.toString();
+        document.getElementById("contractEnd").value = `${endStr.substring(0, 4)}-${endStr.substring(4, 6)}-${endStr.substring(6, 8)}`;
+      } else {
+        document.getElementById("contractEnd").value = data.계약종료일 || "";
+      }
+      
+      document.getElementById("workStart").value = data.근무시작시간 || ""; // 근무시작시간
+      document.getElementById("workEnd").value = data.근무종료시간 || ""; // 근무종료시간
+      document.getElementById("breakTime").value = data.휴게시간 || ""; // 휴게시간
+
+      // 근무요일 체크박스 설정
+      const workdayCheckboxes = document.querySelectorAll(".workday-checkbox");
+      const workdayNone = document.getElementById("workdayNone");
+
+      // 먼저 모든 체크박스 초기화
+      workdayCheckboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+        checkbox.disabled = false;
+      });
+
+      // 저장된 근무요일 가져오기
+      const workdays = data.근무요일 || [];
+      
+      // 근무요일이 배열인 경우
+      if (Array.isArray(workdays)) {
+        // 각 체크박스 설정
+        workdayCheckboxes.forEach((checkbox) => {
+          if (workdays.includes(checkbox.value)) {
+            checkbox.checked = true;
+          }
+        });
+
+        // 해당없음 체크박스 처리
+        if (workdays.includes("해당없음")) {
+          workdayNone.checked = true;
+          // '해당없음'이 선택된 경우 다른 요일 체크박스 비활성화
+          document
+            .querySelectorAll(".workday-checkbox:not(#workdayNone)")
+            .forEach((checkbox) => {
+              checkbox.disabled = true;
+            });
+        } else {
+          workdayNone.checked = false;
+          workdayNone.disabled = workdays.length > 0;
+        }
+      } 
+      // 근무요일이 문자열인 경우 (Supabase에서는 _로 구분된 문자열로 저장)
+      else if (typeof workdays === 'string') {
+        const workdaysArray = workdays.split('_');
+        
+        // 각 체크박스 설정
+        workdayCheckboxes.forEach((checkbox) => {
+          if (workdaysArray.includes(checkbox.value)) {
+            checkbox.checked = true;
+          }
+        });
+
+        // 해당없음 체크박스 처리
+        if (workdaysArray.includes("해당없음")) {
+          workdayNone.checked = true;
+          // '해당없음'이 선택된 경우 다른 요일 체크박스 비활성화
+          document
+            .querySelectorAll(".workday-checkbox:not(#workdayNone)")
+            .forEach((checkbox) => {
+              checkbox.disabled = true;
+            });
+        } else {
+          workdayNone.checked = false;
+          workdayNone.disabled = workdaysArray.length > 0;
+        }
+      }
+
+      document.getElementById("dailyHours").value = data.일일근무시간 || ""; // 일일근무시간
+      document.getElementById("otherWorkType").value = data.기타근무유형 || ""; // 기타근무유형(상세기재)
+
+      // 의무사항 탭 - 날짜 포맷팅
+      // 건강검진일 포맷팅
+      if (typeof data.건강검진일 === 'number') {
+        const dateStr = data.건강검진일.toString();
+        document.getElementById("health_checkup_date").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      } else {
+        document.getElementById("health_checkup_date").value = data.건강검진일 || "";
+      }
+      
+      // 범죄경력일 포맷팅
+      if (typeof data.범죄경력조회일 === 'number') {
+        const dateStr = data.범죄경력조회일.toString();
+        document.getElementById("criminal_record_check_date").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      } else {
+        document.getElementById("criminal_record_check_date").value = data.범죄경력조회일 || "";
+      }
+      
+      // 치매교육일 포맷팅
+      if (typeof data.치매교육이수일 === 'number') {
+        const dateStr = data.치매교육이수일.toString();
+        document.getElementById("dementia_training_date").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      } else {
+        document.getElementById("dementia_training_date").value = data.치매교육이수일 || "";
+      }
+
+      // 자격증 테이블 표시
+      if (data.직원번호) {
+        table_selectedEmployeeCert(data.직원번호);
+      }
+
+      // 일일근무시간 재계산
+      calculateDailyHours();
+      
+      // 계좌항목 탭
+      document.getElementById("bankAccount").value = data.계좌번호 || ""; // 계좌번호
+      document.getElementById("bankName").value = data.계좌은행 || ""; // 계좌은행
+      document.getElementById("accountHolder").value = data.예금주 || ""; // 예금주
+
+      // 탭 전환 - 기본 정보 탭으로 이동
+      document.querySelector('.tab-button[data-tab="basic"]').click();
+    }
+
+    // (구분)선택된 직원의 자격증 목록을 표시하는 함수
+    function table_selectedEmployeeCert(employeeId) {
+      // 먼저 자격증 데이터 로드가 완료되었는지 확인
+      if (!storedData_cert || storedData_cert.length === 0) {
+        console.log("자격증 데이터가 로드되지 않았습니다.");
+        return;
+      }
+
+      const tableBody = document.getElementById("qualificationList");
+      if (!tableBody) {
+        console.log("자격증 테이블을 찾을 수 없습니다.");
+        return;
+      }
+
+      // 입력 행을 제외한 기존 행들 모두 제거 (샘플 데이터 및 이전 데이터)
+      const inputRow = document.getElementById("qualificationInputRow");
+      tableBody.innerHTML = "";
+
+      // 입력 행 다시 추가
+      if (inputRow) {
+        tableBody.appendChild(inputRow);
+      }
+
+      console.log("직원 자격증 데이터 표시 시작...");
+      console.log("선택된 직원번호:", employeeId);
+
+      // 직원번호에 맞는 자격증 데이터 필터링 (Supabase 객체 형식)
+      const employeeCerts = storedData_cert.filter(
+        (cert) => cert.직원번호 === employeeId
+      );
+
+      console.log(`${employeeId} 직원의 자격증 ${employeeCerts.length}개 찾음`);
+
+      // 데이터를 테이블에 추가
+      employeeCerts.forEach((cert) => {
+        const certId = cert.자격등록_id || ""; // 자격등록_id 필드명으로 수정
+        const certName = cert.자격증명 || ""; // 자격증명
+        const certNumber = cert.자격번호 || ""; // 자격번호
+        const certDate = cert.자격증취득일 || ""; // 자격증취득일
+        const certExpiryDate = cert.자격증만료일 || ""; // 자격증만료일
+        const certIssuer = cert.자격증발행처 || ""; // 자격증발행처
+
+        console.log("자격증 ID:", certId, "자격증명:", certName); // 자격증 ID 로그 추가
+
+        // 새로운 행 생성
+        const newRow = document.createElement("tr");
+        newRow.dataset.certId = certId; // 자격증 ID를 데이터 속성으로 저장
+
+        // 행에 셀 추가
+        newRow.innerHTML = `
+          <td>${certName}</td>
+          <td>${certNumber}</td>
+          <td>${certDate}</td>
+          <td>${certExpiryDate}</td>
+          <td>${certIssuer}</td>
+          <td>
+            <button type="button" class="btn btn-delete">삭제</button>
+          </td>
+        `;
+
+        // 테이블에 행 추가 (입력 행 다음에)
+        tableBody.appendChild(newRow);
+
+        // 삭제 버튼 이벤트 추가
+        const deleteBtn = newRow.querySelector(".btn-delete");
+        if (deleteBtn) {
+          deleteBtn.addEventListener("click", async function () {
+            // certId가 비어있는지 확인
+            if (!certId) {
+              showAlert("자격증 ID가 없습니다. 자격증 데이터를 다시 로드해주세요.");
+              return;
+            }
+            
+            showConfirm(
+              "이 자격증 정보를 삭제하시겠습니까?",
+              async function () {
+                try {
+                  showLoading(); // 로딩 표시 시작
+
+                  // 서버에 삭제 요청
+                  const result = await deleteCertData(certId);
+
+                  hideLoading(); // 로딩 표시 종료
+
+                  if (result.success) {
+                    showAlert("자격증 정보가 삭제되었습니다.");
+
+                    // 자격증 데이터 다시 로드하여 최신 상태 반영
+                    await loadCertData();
+
+                    // 자격증 목록 새로고침
+                    table_selectedEmployeeCert(employeeId);
+                  } else {
+                    showAlert(result.message || "삭제 중 오류가 발생했습니다.");
+                  }
+                } catch (error) {
+                  hideLoading(); // 로딩 표시 종료
+                  showAlert("자격증 삭제 중 오류가 발생했습니다: " + error);
+                  console.error("자격증 삭제 중 오류:", error);
+                }
+              }
+            );
+          });
+        }
+      });
+
+      console.log("직원 자격증 데이터 처리 완료");
+    }
+
+    // 자격증 데이터 삭제 함수 (Promise 반환)
+    function deleteCertData(certId) {
+      return new Promise((resolve, reject) => {
+        showLoading(); // 로딩 표시
+
+        // supabase.js의 deleteCertData 함수 호출
+        deleteCertData_Supabase(certId)
+          .then(result => {
+            hideLoading(); // 로딩 표시 종료
+
+            if (result.success) {
+              resolve(result); // Promise 성공 처리
+            } else {
+              showAlert(result.message);
+              reject(result.message); // Promise 실패 처리
+            }
+          })
+          .catch(error => {
+            hideLoading(); // 로딩 표시 종료
+            showAlert("자격증 삭제 중 오류가 발생했습니다: " + error);
+            reject(error); // Promise 실패 처리
+          });
+      });
+    }
+
+    // 1. 함수 정의 부분 (위쪽에 배치)
+
+    // 주민등록번호 관련 함수
+    function idNumberCheck(value) {
+      // 값이 비어있으면 유효한 것으로 처리 (필수 입력이 아닌 경우)
+      if (value === "") {
+        return true;
+      }
+
+      // 하이픈 제거
+      const cleanValue = value.replace(/-/g, "");
+
+      // 13자리 숫자인지 확인 (정규식 사용)
+      const regex = /^\d{13}$/;
+      return regex.test(cleanValue);
+    }
+
+    // 주민등록번호를 000000-0000000 형식으로 변경하는 함수
+    function idNumberChange(value) {
+      // 값이 비어있으면 그대로 반환
+      if (value === "") {
+        return "";
+      }
+
+      // 하이픈 제거
+      const cleanValue = value.replace(/-/g, "");
+
+      // 13자리 숫자가 아니면 그대로 반환
+      if (!/^\d{13}$/.test(cleanValue)) {
+        return value;
+      }
+
+      // 000000-0000000 형식으로 변환
+      return cleanValue.substring(0, 6) + "-" + cleanValue.substring(6);
+    }
+
+    // 주민등록번호가 000000-0000000 형식인지 확인하는 함수
+    function idNumberDoubleCheck(value) {
+      // 값이 비어있으면 유효한 것으로 처리 (필수 입력이 아닌 경우)
+      if (value === "") {
+        return true;
+      }
+
+      // 000000-0000000 형식인지 확인 (정규식 사용)
+      const regex = /^\d{6}-\d{7}$/;
+      return regex.test(value);
+    }
+
+    // 날짜 8자리 숫자 체크 함수
+    function date8numberCheck(value) {
+      // 값이 비어있으면 유효한 것으로 처리 (필수 입력이 아닌 경우)
+      if (value === "") {
+        return true;
+      }
+
+      // 8자리 숫자인지 확인 (정규식 사용)
+      const regex = /^\d{8}$/;
+      return regex.test(value);
+    }
+
+    // 만 나이 계산 함수
+    function manAge(birthDateStr) {
+      // 입력값이 비어있거나 유효하지 않은 경우
+      if (!birthDateStr || !date8numberCheck(birthDateStr)) {
+        return "";
+      }
+
+      // 생년월일 파싱 (YYYYMMDD 형식)
+      const year = parseInt(birthDateStr.substring(0, 4));
+      const month = parseInt(birthDateStr.substring(4, 6));
+      const day = parseInt(birthDateStr.substring(6, 8));
+
+      // 유효한 날짜인지 확인
+      const birthDate = new Date(year, month - 1, day); // 자바스크립트의 월은 0부터 시작
+      if (
+        birthDate.getFullYear() !== year ||
+        birthDate.getMonth() !== month - 1 ||
+        birthDate.getDate() !== day
+      ) {
+        return ""; // 유효하지 않은 날짜
+      }
+
+      // 현재 날짜
+      const today = new Date();
+
+      // 만 나이 계산
+      let age = today.getFullYear() - birthDate.getFullYear();
+
+      // 생일이 아직 지나지 않았는지 확인
+      const isBirthdayPassed =
+        today.getMonth() > birthDate.getMonth() ||
+        (today.getMonth() === birthDate.getMonth() &&
+          today.getDate() >= birthDate.getDate());
+
+      // 생일이 아직 지나지 않았으면 1살 빼기
+      if (!isBirthdayPassed) {
+        age--;
+      }
+
+      return age.toString();
+    }
+
+    // 이메일 주소 형식 확인 함수
+    function emailFormatCheck(email) {
+      // 값이 비어있으면 유효한 것으로 처리 (필수 입력이 아닌 경우)
+      if (email === "") {
+        return true;
+      }
+
+      // 이메일 형식 정규식 (RFC 5322 표준에 기반)
+      const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      return regex.test(email);
+    }
+
+    // 전화번호가 11자리 이하 숫자인지 확인하는 함수
+    function phoneNumberCheck(value) {
+      // 값이 비어있으면 유효한 것으로 처리 (필수 입력이 아닌 경우)
+      if (value === "") {
+        return true;
+      }
+
+      // 하이픈 제거
+      const cleanValue = value.replace(/-/g, "");
+
+      // 숫자만 남아있는지 확인
+      const isNumeric = /^\d+$/.test(cleanValue);
+
+      // 11자리 이하 숫자인지 확인
+      return isNumeric && cleanValue.length <= 11;
+    }
+
+    // 전화번호를 형식에 맞게 변환하는 함수
+    function phoneNumberChange(value) {
+      // 값이 비어있으면 그대로 반환
+      if (value === "") {
+        return "";
+      }
+
+      // 하이픈 제거하고 숫자만 추출
+      const cleanValue = value.replace(/-/g, "").replace(/[^\d]/g, "");
+
+      // 전화번호 길이에 따라 포맷 적용
+      if (cleanValue.length === 8) {
+        // 지역번호 없는 8자리 번호 (예: 국번-국번-번호)
+        return cleanValue.substring(0, 4) + "-" + cleanValue.substring(4);
+      } else if (cleanValue.length === 9) {
+        // 서울 지역번호(02)가 포함된 전화번호
+        if (cleanValue.startsWith("02")) {
+          return (
+            cleanValue.substring(0, 2) +
+            "-" +
+            cleanValue.substring(2, 5) +
+            "-" +
+            cleanValue.substring(5)
+          );
+        } else {
+          // 기타 9자리 번호
+          return (
+            cleanValue.substring(0, 3) +
+            "-" +
+            cleanValue.substring(3, 6) +
+            "-" +
+            cleanValue.substring(6)
+          );
+        }
+      } else if (cleanValue.length === 10) {
+        // 서울 지역번호(02)가 포함된 전화번호
+        if (cleanValue.startsWith("02")) {
+          return (
+            cleanValue.substring(0, 2) +
+            "-" +
+            cleanValue.substring(2, 6) +
+            "-" +
+            cleanValue.substring(6)
+          );
+        } else {
+          // 기타 지역번호나 휴대폰 번호 (3-3-4)
+          return (
+            cleanValue.substring(0, 3) +
+            "-" +
+            cleanValue.substring(3, 6) +
+            "-" +
+            cleanValue.substring(6)
+          );
+        }
+      } else if (cleanValue.length === 11) {
+        // 휴대폰 번호 (3-4-4)
+        return (
+          cleanValue.substring(0, 3) +
+          "-" +
+          cleanValue.substring(3, 7) +
+          "-" +
+          cleanValue.substring(7)
+        );
+      } else {
+        // 기타 길이는 그대로 반환
+        return cleanValue;
+      }
+    }
+
+    // 전화번호 형식이 올바른지 최종 확인하는 함수
+    function phoneNumberDoubleCheck(value) {
+      // 값이 비어있으면 유효한 것으로 처리 (필수 입력이 아닌 경우)
+      if (value === "") {
+        return true;
+      }
+
+      // 일반적인 전화번호 형식 패턴 (다양한 패턴 포함)
+      // 1. 휴대폰: 010-XXXX-XXXX, 011-XXX-XXXX 등
+      // 2. 서울 지역번호: 02-XXX-XXXX, 02-XXXX-XXXX
+      // 3. 지방 지역번호: 03X-XXX-XXXX, 04X-XXX-XXXX, 05X-XXX-XXXX 등
+      // 4. 인터넷 전화: 070-XXXX-XXXX
+      // 5. 기타 8자리: XXXX-XXXX
+      const regex =
+        /^(01[0-9]{1}-\d{3,4}-\d{4}|02-\d{3,4}-\d{4}|0[3-9]{1}[0-9]{1}-\d{3}-\d{4}|070-\d{4}-\d{4}|\d{4}-\d{4})$/;
+      return regex.test(value);
+    }
+
+    // 일일근무시간 계산 함수
+    function calculateDailyHours() {
+      const workStartField = document.getElementById("workStart");
+      const workEndField = document.getElementById("workEnd");
+      const breakTimeField = document.getElementById("breakTime");
+      const dailyHoursField = document.getElementById("dailyHours");
+
+      const workStartValue = workStartField.value.trim();
+      const workEndValue = workEndField.value.trim();
+      const breakTimeValue = breakTimeField.value.trim();
+
+      // 입력 값이 비어있으면 계산하지 않음
+      if (!workStartValue || !workEndValue || !breakTimeValue) {
+        dailyHoursField.value = "";
+        return;
+      }
+
+      // 시작 시간 파싱 (0900, 900, 09:00, 9:00 형식 처리)
+      let startHour = 0;
+      let startMinute = 0;
+
+      if (workStartValue.includes(":")) {
+        // 09:00 또는 9:00 형식
+        const parts = workStartValue.split(":");
+        startHour = parseInt(parts[0], 10);
+        startMinute = parseInt(parts[1], 10);
+      } else {
+        // 0900 또는 900 형식
+        if (workStartValue.length === 4) {
+          startHour = parseInt(workStartValue.substring(0, 2), 10);
+          startMinute = parseInt(workStartValue.substring(2), 10);
+        } else if (workStartValue.length === 3) {
+          startHour = parseInt(workStartValue.substring(0, 1), 10);
+          startMinute = parseInt(workStartValue.substring(1), 10);
+        }
+      }
+
+      // 종료 시간 파싱 (1800 또는 18:00 형식 처리)
+      let endHour = 0;
+      let endMinute = 0;
+
+      if (workEndValue.includes(":")) {
+        // 18:00 형식
+        const parts = workEndValue.split(":");
+        endHour = parseInt(parts[0], 10);
+        endMinute = parseInt(parts[1], 10);
+      } else {
+        // 1800 형식
+        if (workEndValue.length === 4) {
+          endHour = parseInt(workEndValue.substring(0, 2), 10);
+          endMinute = parseInt(workEndValue.substring(2), 10);
+        } else if (workEndValue.length === 3) {
+          endHour = parseInt(workEndValue.substring(0, 1), 10);
+          endMinute = parseInt(workEndValue.substring(1), 10);
+        }
+      }
+
+      // 시간을 분으로 변환
+      const startMinutes = startHour * 60 + startMinute;
+      const endMinutes = endHour * 60 + endMinute;
+
+      // 휴게시간 파싱 (0.5H 또는 1H 형식)
+      let breakHours = 0;
+      if (breakTimeValue.includes("H")) {
+        breakHours = parseFloat(breakTimeValue.replace("H", ""));
+      }
+      const breakMinutes = breakHours * 60;
+
+      // 총 근무시간 계산 (분 단위)
+      let totalWorkMinutes = endMinutes - startMinutes - breakMinutes;
+
+      // 음수인 경우 0으로 처리하고 경고 메시지 표시
+      if (totalWorkMinutes < 0) {
+        totalWorkMinutes = 0;
+        showAlert("근무시작시간, 종료시간확인");
+      }
+
+      // 소수점 한 자리까지의 시간으로 변환 (예: 8.5H)
+      const totalWorkHours = Math.round((totalWorkMinutes / 60) * 10) / 10;
+
+      // 결과 표시 (8.5H 형식)
+      dailyHoursField.value = `${totalWorkHours}H`;
+    }
+
+    // 모든 입력 필드를 초기화하는 함수
+    function clearAllContents() {
+      // 기본 정보 입력 필드 초기화
+      document.getElementById("employeeId").value = "";
+      document.getElementById("name").value = "";
+      document.getElementById("ssn").value = "";
+      document.getElementById("birthdate").value = "";
+      document.getElementById("age").value = "";
+      document.getElementById("address").value = "";
+      document.getElementById("email").value = "";
+      document.getElementById("mobile").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("emergency").value = "";
+      
+      // 계좌 정보 입력 필드 초기화
+      document.getElementById("bankAccount").value = "";
+      document.getElementById("bankName").value = "";
+      document.getElementById("accountHolder").value = "";
+
+      // 계약사항 탭 입력 필드 초기화
+      document.getElementById("workType").value = "";
+      document.getElementById("position").value = "";
+      document.getElementById("contractDate").value = "";
+      document.getElementById("contractStart").value = "";
+      document.getElementById("contractEnd").value = "99991231";
+      document.getElementById("workStart").value = "";
+      document.getElementById("workEnd").value = "";
+      document.getElementById("breakTime").value = "0H";
+      document.getElementById("dailyHours").value = "";
+      document.getElementById("otherWorkType").value = "";
+
+      // 근무요일 체크박스 초기화 (월~금만 체크)
+      const workdayCheckboxes = document.querySelectorAll(".workday-checkbox");
+      workdayCheckboxes.forEach((checkbox) => {
+        // 월~금은 체크, 토,일,해당없음은 체크 해제
+        if (["월", "화", "수", "목", "금"].includes(checkbox.value)) {
+          checkbox.checked = true;
+        } else {
+          checkbox.checked = false;
+        }
+      });
+
+      // 해당없음 체크박스 상태 업데이트
+      document.getElementById("workdayNone").disabled = true;
+
+      // 의무사항 탭 입력 필드 초기화
+      document.getElementById("health_checkup_date").value = "";
+      document.getElementById("criminal_record_check_date").value = "";
+      document.getElementById("dementia_training_date").value = "";
+
+      // 자격사항 탭 데이터 행 초기화 (입력 행 제외)
+      const qualificationList = document.getElementById("qualificationList");
+      const qualificationRows = qualificationList.querySelectorAll(
+        "tr:not(#qualificationInputRow)"
+      );
+      qualificationRows.forEach((row) => row.remove());
+
+      // 자격사항 입력 필드 초기화
+      document.getElementById("certName").value = "";
+      document.getElementById("certNumber").value = "";
+      document.getElementById("certDate").value = "";
+      document.getElementById("certExpiryDate").value = "";
+      document.getElementById("certIssuer").value = "";
+    }
+
+    // 입력 데이터 유효성 검사 함수
+    function EntryCheck() {
+      // 1. 필수 입력 필드 (빈칸 아니어야 함)
+      const requiredFields = [
+        { id: "employeeId", name: "직원번호" },
+        { id: "name", name: "직원명" },
+        { id: "ssn", name: "주민등록번호" },
+        { id: "birthdate", name: "생년월일" },
+        { id: "address", name: "주소" },
+        { id: "email", name: "이메일주소" },
+        { id: "mobile", name: "휴대전화번호" },
+        { id: "contractDate", name: "계약일" },
+        { id: "contractStart", name: "계약시작일" },
+        { id: "contractEnd", name: "계약종료일" },
+      ];
+
+      // 2. 필수 선택 필드 (선택이 아니어야 함)
+      const requiredSelects = [
+        { id: "workType", name: "근무구분" },
+        { id: "position", name: "담당직종" },
+      ];
+
+      // 필수 입력 필드 확인
+      const missingFields = [];
+
+      // 텍스트 입력 필드 확인
+      requiredFields.forEach((field) => {
+        const value = document.getElementById(field.id).value.trim();
+        if (!value) {
+          missingFields.push(field.name);
+        }
+      });
+
+      // 선택 필드 확인
+      requiredSelects.forEach((field) => {
+        const value = document.getElementById(field.id).value;
+        if (!value || value === "선택" || value === "") {
+          missingFields.push(field.name);
+        }
+      });
+
+      // 3. 근무요일 확인 (하나 이상 선택되어야 함)
+      const workdayCheckboxes = document.querySelectorAll(
+        ".workday-checkbox:not(#workdayNone)"
+      );
+      const workdayNone = document.getElementById("workdayNone");
+
+      // 근무요일 중 하나 이상 체크되었는지 또는 '해당없음'이 체크되었는지 확인
+      const anyWorkdayChecked =
+        Array.from(workdayCheckboxes).some((cb) => cb.checked) ||
+        workdayNone.checked;
+
+      if (!anyWorkdayChecked) {
+        missingFields.push("근무요일");
+      }
+
+      // 입력 누락 항목이 있으면 false 반환, 모두 입력되었으면 true 반환
+      if (missingFields.length > 0) {
+        return {
+          isValid: false,
+          missingFields: missingFields,
+        };
+      }
+
+      return {
+        isValid: true,
+        missingFields: [],
+      };
+    }
+
+    // (구분)자격증 데이터 저장 함수 정의
+    function append_CertLineData(certData) {
+      // Promise를 반환하도록 구현
+      return new Promise(async (resolve, reject) => {
+        try {
+          // 로딩 표시
+          showLoading();
+          
+          // Supabase 함수 호출
+          const result = await processCertFormData(certData);
+          
+          // 로딩 숨기기
+          hideLoading();
+          
+          if (result.success) {
+            resolve(result); // Promise 성공 처리
+          } else {
+            showAlert(result.message);
+            reject(result.message); // Promise 실패 처리
+          }
+        } catch (error) {
+          // 로딩 숨기기
+          hideLoading();
+          showAlert("자격증 저장 중 오류가 발생했습니다: " + error);
+          reject(error); // Promise 실패 처리
+        }
+      });
+    }
+
+    // (구분)직원 데이터 저장 함수 정의
+    function append_EmployeeLineData() {
+      // Promise를 반환하도록 구현
+      return new Promise((resolve, reject) => {
+        // 근무요일 체크박스 값 수집
+        const workdaysArray = Array.from(
+          document.querySelectorAll(".workday-checkbox:checked")
+        ).map((cb) => cb.value);
+
+        // 폼 데이터 수집
+        const formData = {
+          employeeId: document.getElementById("employeeId").value,
+          name: document.getElementById("name").value,
+          ssn: document.getElementById("ssn").value,
+          birthdate: document.getElementById("birthdate").value,
+          age: document.getElementById("age").value,
+          address: document.getElementById("address").value,
+          email: document.getElementById("email").value,
+          mobile: document.getElementById("mobile").value,
+          phone: document.getElementById("phone").value,
+          emergency: document.getElementById("emergency").value,
+          workType: document.getElementById("workType").value,
+          position: document.getElementById("position").value,
+          contractDate: document.getElementById("contractDate").value,
+          contractStart: document.getElementById("contractStart").value,
+          contractEnd: document.getElementById("contractEnd").value,
+          workStart: document.getElementById("workStart").value,
+          workEnd: document.getElementById("workEnd").value,
+          breakTime: document.getElementById("breakTime").value,
+          workdays: workdaysArray,
+          dailyHours: document.getElementById("dailyHours").value,
+          otherWorkType: document.getElementById("otherWorkType").value,
+          healthCheckupDate: document.getElementById("health_checkup_date").value,
+          criminalRecordDate: document.getElementById("criminal_record_check_date").value,
+          dementiaTrainingDate: document.getElementById("dementia_training_date").value,
+          bankAccount: document.getElementById("bankAccount").value,
+          bankName: document.getElementById("bankName").value,
+          accountHolder: document.getElementById("accountHolder").value,
+        };
+
+        if (!formData.name) {
+          showAlert("직원 이름을 입력해주세요.");
+          reject("직원 이름이 입력되지 않았습니다.");
+          return;
+        }
+
+        // 로딩 표시 시작
+        showLoading();
+
+        // Supabase 함수 호출
+        processEmployeeFormData(formData)
+          .then(result => {
+            hideLoading(); // 로딩 표시 종료
+            
+            if (result.success) {
+              // 성공 시 직원번호 업데이트
+              if (result.employeeId) {
+                document.getElementById("employeeId").value = result.employeeId;
+              }
+              resolve(result); // Promise 성공 처리
+            } else {
+              showAlert(result.message);
+              reject(result.message); // Promise 실패 처리
+            }
+          })
+          .catch(error => {
+            hideLoading(); // 로딩 표시 종료
+            showAlert("직원 데이터 저장 중 오류가 발생했습니다: " + error);
+            reject(error); // Promise 실패 처리
+          });
+      });
+    }
+
+    // (구분)직원 데이터 이동 함수 정의
+    function move_EmployeeLineData() {
+      // Promise를 반환하도록 구현
+      return new Promise((resolve, reject) => {
+        // 직원등록_ID 사용
+        const employeeId = selectedMemberId;
+
+        if (!employeeId) {
+          showAlert("직원등록_ID가 없습니다. 직원을 먼저 선택해주세요.");
+          reject("직원등록_ID가 없습니다.");
+          return;
+        }
+
+        // 로딩 표시 시작
+        showLoading();
+        
+        // Supabase 함수 호출
+        move_EmployeeLine(employeeId)
+          .then(result => {
+            hideLoading(); // 로딩 표시 종료
+            
+            if (result.success) {
+              resolve(result);
+            } else {
+              showAlert(result.message);
+              reject(result.message);
+            }
+          })
+          .catch(error => {
+            hideLoading(); // 로딩 표시 종료
+            showAlert("직원 데이터 이동 중 오류가 발생했습니다: " + error);
+            reject(error);
+          });
+      });
+    }
+
+    // (구분)새로운 직원번호 생성 함수
+    function generateNewEmployeeId() {
+      // 현재 연도의 마지막 두 자리 가져오기
+      const currentYear = new Date().getFullYear().toString().slice(-2);
+
+      // 직원번호 형식 S + YY + 001~999
+      const prefix = "S" + currentYear;
+
+      // 기존 직원번호 중 현재 연도의 것을 필터링
+      const existingIds = [];
+
+      if (storedData_all && storedData_all.length > 0) {
+        storedData_all.forEach((row) => {
+          const employeeId = row[1]; // 배열[1]에 직원번호 저장
+          if (employeeId && employeeId.startsWith(prefix)) {
+            existingIds.push(employeeId);
+          }
+        });
+      }
+
+      // 가장 큰 번호 찾기
+      let maxNumber = 0;
+      existingIds.forEach((id) => {
+        // prefix(EYY) 이후의 숫자 부분 추출
+        const numberPart = parseInt(id.substring(3), 10);
+        if (!isNaN(numberPart) && numberPart > maxNumber) {
+          maxNumber = numberPart;
+        }
+      });
+
+      // 다음 번호 생성 (3자리 숫자로 패딩)
+      const nextNumber = (maxNumber + 1).toString().padStart(3, "0");
+
+      return prefix + nextNumber;
+    }
+
+    // 2. 이벤트 리스너 및 초기화 코드 (아래쪽에 배치)
+    document.addEventListener("DOMContentLoaded", function () {
+      // Supabase 초기화
+      initSupabase();
+      
+      // 페이지 로드 시 데이터 로드 및 테이블 표시
+      initializeData();
+
+      // 수정/삭제 버튼 초기 비활성화, 입력 버튼 활성화
+      document.getElementById("editBtn").disabled = true;
+      document.getElementById("deleteBtn").disabled = false;
+      document.getElementById("submitBtn").disabled = false;
+
+      // 테이블 헤더 클릭 이벤트 추가
+      const tableHeaders = document.querySelectorAll('#employeeTable th');
+      tableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+          const column = this.getAttribute('data-sort');
+          sortTable(column);
+        });
+        
+        // 커서 스타일 추가
+        header.style.cursor = 'pointer';
+      });
+
+      // 테이블 헤더 스타일 추가
+      const style = document.createElement('style');
+      style.innerHTML = `
+        th.sort-asc::after {
+          content: '';
+        }
+        th.sort-desc::after {
+          content: '';
+        }
+      `;
+      document.head.appendChild(style);
+
+      const tabButtons = document.querySelectorAll(".tab-button");
+      const tabContents = document.querySelectorAll(".tab-content");
+
+      // 모달 요소들 가져오기
+      const customModal = document.getElementById("customModal");
+      const modalClose = document.querySelector("#customModal .modal-close");
+      const modalConfirmBtn = document.getElementById("modalConfirmBtn");
+
+      // 모달 닫기 이벤트 리스너 설정
+      if (modalClose) {
+        modalClose.addEventListener("click", function () {
+          closeModal();
+        });
+      }
+
+      if (modalConfirmBtn) {
+        modalConfirmBtn.addEventListener("click", function () {
+          closeModal();
+        });
+      }
+
+      // confirm 모달 닫기 이벤트 설정 (초기 설정)
+      const confirmModalClose = document.querySelector(
+        "#confirmModal .modal-close"
+      );
+      const confirmNoBtn = document.getElementById("confirmNoBtn");
+
+      if (confirmModalClose) {
+        confirmModalClose.addEventListener("click", function () {
+          closeConfirmModal();
+        });
+      }
+
+      if (confirmNoBtn) {
+        confirmNoBtn.addEventListener("click", function () {
+          closeConfirmModal();
+        });
+      }
+
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD 형식
+      document.getElementById("referenceDate").value = today;
+
+      // 탭 전환 기능
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          // 모든 탭 비활성화
+          tabButtons.forEach((btn) => btn.classList.remove("active"));
+          tabContents.forEach((content) => content.classList.remove("active"));
+
+          // 클릭한 탭 활성화
+          this.classList.add("active");
+          const tabId = this.getAttribute("data-tab");
+          document.getElementById(tabId).classList.add("active");
+        });
+      });
+
+      // 주민등록번호 입력 필드에 이벤트 추가
+      const ssnField = document.getElementById("ssn");
+
+      ssnField.addEventListener("blur", function () {
+        const value = this.value.trim();
+
+        // 값이 비어있으면 검사하지 않음
+        if (value === "") {
+          return;
+        }
+
+        // 1단계: 13자리 숫자인지 확인
+        if (!idNumberCheck(value)) {
+          showAlert("주민등록번호는 13자리 숫자여야 합니다.");
+          this.value = "";
+          this.focus();
+          return;
+        }
+
+        // 2단계: 형식에 맞게 변환
+        this.value = idNumberChange(value);
+
+        // 3단계: 최종 형식 확인
+        if (!idNumberDoubleCheck(this.value)) {
+          showAlert("주민등록번호 형식이 올바르지 않습니다. (000000-0000000)");
+          this.value = "";
+          this.focus();
+        }
+      });
+
+      // 생년월일 필드에 이벤트 추가
+      const dateFields = [
+        "birthdate",
+        "contractDate",
+        "contractStart",
+        "contractEnd",
+        "certDate",
+        "certExpiryDate",
+      ];
+
+      dateFields.forEach((fieldId) => {
+        const field = document.getElementById(fieldId);
+
+        field.addEventListener("blur", function () {
+          const value = this.value.trim();
+
+          if (value !== "" && !date8numberCheck(value)) {
+            showAlert("8자리 숫자만 입력 가능합니다. 예) 20230101");
+            this.value = ""; // 필드 초기화
+            this.focus(); // 포커스 다시 설정
+          }
+
+          // 생년월일 필드인 경우 만 나이 계산
+          if (fieldId === "birthdate" && value !== "") {
+            const age = manAge(value);
+            document.getElementById("age").value = age;
+          }
+        });
+      });
+
+      // 이메일 주소 입력 필드에 이벤트 추가
+      const emailField = document.getElementById("email");
+
+      emailField.addEventListener("blur", function () {
+        const value = this.value.trim();
+
+        // 값이 비어있으면 검사하지 않음
+        if (value === "") {
+          return;
+        }
+
+        // 이메일 형식 확인
+        if (!emailFormatCheck(value)) {
+          showAlert("올바른 이메일 형식이 아닙니다. 예) example@domain.com");
+          this.value = ""; // 필드 초기화
+          this.focus(); // 포커스 다시 설정
+        }
+      });
+
+      // 전화번호 입력 필드들에 이벤트 추가
+      const phoneFields = ["mobile", "phone", "emergency"];
+
+      phoneFields.forEach((fieldId) => {
+        const field = document.getElementById(fieldId);
+
+        field.addEventListener("blur", function () {
+          const value = this.value.trim();
+
+          // 값이 비어있으면 검사하지 않음
+          if (value === "") {
+            return;
+          }
+
+          // 1단계: 11자리 이하 숫자인지 확인
+          if (!phoneNumberCheck(value)) {
+            showAlert("전화번호는 11자리 이하의 숫자만 입력 가능합니다.");
+            this.value = "";
+            this.focus();
+            return;
+          }
+
+          // 2단계: 형식에 맞게 변환
+          this.value = phoneNumberChange(value);
+
+          // 3단계: 최종 형식 확인
+          if (!phoneNumberDoubleCheck(this.value)) {
+            showAlert("전화번호 형식이 올바르지 않습니다.");
+            this.value = "";
+            this.focus();
+          }
+        });
+      });
+
+      // 근무시간 계산 관련 필드에 이벤트 추가
+      const workStartField = document.getElementById("workStart");
+      const workEndField = document.getElementById("workEnd");
+      const breakTimeField = document.getElementById("breakTime");
+
+      // 근무시간 관련 필드 변경 시 일일근무시간 계산
+      workStartField.addEventListener("change", calculateDailyHours);
+      workEndField.addEventListener("change", calculateDailyHours);
+      breakTimeField.addEventListener("change", calculateDailyHours);
+
+      // 근무요일 체크박스 처리
+      const workdayCheckboxes = document.querySelectorAll(
+        ".workday-checkbox:not(#workdayNone)"
+      );
+      const workdayNone = document.getElementById("workdayNone");
+
+      // 페이지 로드 시 월~금 체크박스가 체크되어 있으므로 '해당없음' 체크박스 비활성화
+      const anyChecked = Array.from(workdayCheckboxes).some((cb) => cb.checked);
+      workdayNone.disabled = anyChecked;
+
+      // '해당없음' 체크박스 처리
+      workdayNone.addEventListener("change", function () {
+        workdayCheckboxes.forEach((checkbox) => {
+          checkbox.disabled = this.checked;
+          if (this.checked) {
+            checkbox.checked = false;
+          }
+        });
+      });
+
+      // 다른 요일 체크박스 처리
+      workdayCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", function () {
+          // 하나라도 체크되어 있는지 확인
+          const anyChecked = Array.from(workdayCheckboxes).some(
+            (cb) => cb.checked
+          );
+
+          // 체크된 항목이 있으면 '해당없음' 비활성화
+          workdayNone.disabled = anyChecked;
+          if (anyChecked) {
+            workdayNone.checked = false;
+          }
+        });
+      });
+
+      // 신규직원등록 버튼 클릭 시 폼 초기화
+      document
+        .getElementById("newEmployeeBtn")
+        .addEventListener("click", function () {
+          document.getElementById("employeeForm").reset();
+        });
+
+      // 재직직원 조회 버튼 클릭 이벤트
+      document
+        .getElementById("activeEmployeeBtn")
+        .addEventListener("click", function () {
+          // 테이블 업데이트
+          table_CurrentEmployee();
+          showAlert(
+            `${
+              document.getElementById("referenceDate").value
+            } 기준 재직 중인 직원이 조회되었습니다.`
+          );
+        });
+
+      // 전직원 조회 버튼 클릭 이벤트
+      document
+        .getElementById("allEmployeeBtn")
+        .addEventListener("click", function () {
+          // 모든 직원(재직 및 퇴직) 표시 로직은 별도로 구현 필요
+          // 현재는 간단히 현재 날짜 기준 직원을 표시
+          table_AllEmployee();
+          showAlert(
+            `${
+              document.getElementById("referenceDate").value
+            } 기준 직원이 조회되었습니다.`
+          );
+        });
+
+      // 조회 기준일 변경 이벤트
+      document
+        .getElementById("referenceDate")
+        .addEventListener("change", function () {
+          // 날짜 변경 시 자동으로 테이블 업데이트
+          table_AllEmployee();
+        });
+
+      // 초기화 버튼에 이벤트 리스너 추가
+      document
+        .getElementById("resetBtn")
+        .addEventListener("click", function () {
+          clearAllContents();
+          // 기본 정보 탭으로 이동
+          document.querySelector("#contractTabBtn").click();
+
+        });
+
+      // 삭제 버튼에 이벤트 리스너 추가
+      document
+        .getElementById("deleteBtn")
+        .addEventListener("click", function () {
+          // 선택된 직원 ID 확인
+          if (!selectedMemberId) {
+            showAlert("삭제할 직원을 먼저 선택해주세요.");
+            return;
+          }
+
+          // 확인 모달 표시
+          showConfirm(
+            "선택한 직원 정보를 삭제하시겠습니까? 삭제된 정보는 복구할 수 없습니다.",
+            async function() {
+              try {
+                showLoading(); // 로딩 표시 시작
+                
+                // 직원 데이터를 OUTDATED 테이블로 이동
+                const result = await move_EmployeeLine(selectedMemberId);
+                
+                hideLoading(); // 로딩 표시 종료
+                
+                if (result.success) {
+                  // 성공 시 데이터 갱신 및 폼 초기화
+                  await loadAllData();
+                  table_CurrentEmployee();
+                  clearAllContents();
+                  
+                  // 버튼 상태 변경
+                  document.getElementById("editBtn").disabled = true;
+                  document.getElementById("deleteBtn").disabled = true;
+                  document.getElementById("submitBtn").disabled = false;
+                  
+                  showAlert("직원 정보가 성공적으로 삭제되었습니다.");
+                } else {
+                  showAlert(result.message || "삭제 중 오류가 발생했습니다.");
+                }
+              } catch (error) {
+                hideLoading(); // 로딩 표시 종료
+                showAlert("직원 정보 삭제 중 오류가 발생했습니다: " + error);
+                console.error("직원 삭제 중 오류:", error);
+              }
+            }
+          );
+        });
+
+      // 입력 버튼 이벤트 리스너 추가
+      document
+        .getElementById("submitBtn")
+        .addEventListener("click", async function (e) {
+          e.preventDefault(); // 폼 기본 제출 동작 방지
+
+          // 입력 데이터 유효성 검사
+          const validationResult = EntryCheck();
+
+          if (!validationResult.isValid) {
+            // 누락된 필드가 있으면 모달로 표시
+            const missingFieldsText = validationResult.missingFields.join(", ");
+            showAlert(`다음 항목을 입력해주세요: ${missingFieldsText}`);
+            return;
+          }
+
+          try {
+            showLoading(); // 로딩 표시 시작
+
+            // 직원 데이터 저장
+            await append_EmployeeLineData();
+
+            // 데이터 업데이트 및 테이블 갱신
+            await loadAllData(); // 서버에서 새로운 데이터 로드
+            table_CurrentEmployee(); // 테이블 업데이트
+            clearAllContents(); // 테이블 업데이트 후 폼 초기화
+            hideLoading(); // 로딩 표시 종료
+
+            showAlert("직원 정보가 성공적으로 등록되었습니다.");
+          } catch (error) {
+            hideLoading(); // 에러 발생 시 로딩 표시 종료
+            showAlert("데이터 처리 중 오류가 발생했습니다: " + error);
+          }
+        });
+
+      // 페이지 로드 시 초기 계산 및 설정
+      calculateDailyHours();
+
+      // 수정 버튼 이벤트 리스너
+      document
+        .getElementById("editBtn")
+        .addEventListener("click", async function () {
+          // 입력 데이터 유효성 검사
+          const validationResult = EntryCheck();
+
+          if (!validationResult.isValid) {
+            const missingFieldsText = validationResult.missingFields.join(", ");
+            showAlert(`다음 항목을 입력해주세요: ${missingFieldsText}`);
+            return;
+          }
+
+          try {
+            showLoading(); // 로딩 표시 시작
+
+            // 1. 기존 직원 데이터를 OUTDATED_직원관리 시트로 이동
+            await move_EmployeeLineData();
+
+            // 2. 새 데이터 저장
+            await append_EmployeeLineData();
+
+            // 3. 데이터 갱신 및 테이블 업데이트
+            await loadAllData();
+            table_CurrentEmployee();
+
+            // 4. 폼 초기화
+            clearAllContents();
+
+            hideLoading(); // 로딩 표시 종료
+            showAlert("직원 정보가 성공적으로 수정되었습니다.");
+          } catch (error) {
+            hideLoading(); // 에러 발생 시 로딩 표시 종료
+            showAlert("직원 정보 수정 중 오류가 발생했습니다: " + error);
+          }
+
+          // 5. 수정/삭제 버튼 비활성화, 입력 버튼 활성화
+          document.getElementById("editBtn").disabled = true;
+          document.getElementById("deleteBtn").disabled = true;
+          document.getElementById("submitBtn").disabled = false;
+        });
+      // 신규직원등록 버튼 클릭 이벤트
+      const newEmployeeBtn = document.getElementById("newEmployeeBtn");
+      if (newEmployeeBtn) {
+        newEmployeeBtn.addEventListener("click", function () {
+          // 폼 초기화
+          clearAllContents();
+
+          // 직원번호에 "신규직원등록중" 입력
+          document.getElementById("employeeId").value = "신규직원등록중";
+
+          // 버튼 상태 설정 - 입력 버튼 활성화, 수정/삭제 버튼 비활성화
+          document.getElementById("submitBtn").disabled = false;
+          document.getElementById("editBtn").disabled = true;
+          document.getElementById("deleteBtn").disabled = true;
+
+          // 직원목록 테이블의 선택 효과 제거
+          const tableBody = document.getElementById("employeeTableBody");
+          if (tableBody) {
+            const allRows = tableBody.querySelectorAll("tr");
+            allRows.forEach((row) => {
+              row.classList.remove("selected-row");
+            });
+          }
+
+          // 기본 정보 탭으로 이동
+          document.querySelector("#contractTabBtn").click();
+
+          // 사용자에게 알림
+          showAlert("새 직원등록을 시작합니다. 직원 정보를 입력해주세요.");
+        });
+      }
+
+      // 근무시작시간 입력 필드 blur 이벤트 추가
+      document
+        .getElementById("workStart")
+        .addEventListener("blur", function () {
+          const value = this.value.trim();
+
+          // 값이 비어있으면 검사하지 않음
+          if (value === "") {
+            return;
+          }
+
+          // 4자리 숫자인지 확인 (정규식 사용)
+          const fourDigitRegex = /^\d{3,4}$/;
+          if (!fourDigitRegex.test(value)) {
+            showAlert("근무시작시간은 4자리 숫자로 입력해주세요. (예: 0900)");
+            this.value = "";
+            this.focus();
+          }
+        });
+
+      // 근무종료시간 입력 필드 blur 이벤트 추가
+      document.getElementById("workEnd").addEventListener("blur", function () {
+        const value = this.value.trim();
+
+        // 값이 비어있으면 검사하지 않음
+        if (value === "") {
+          return;
+        }
+
+        // 4자리 숫자인지 확인 (정규식 사용)
+        const fourDigitRegex = /^\d{3,4}$/;
+        if (!fourDigitRegex.test(value)) {
+          showAlert("근무종료시간은 4자리 숫자로 입력해주세요. (예: 1800)");
+          this.value = "";
+          this.focus();
+        }
+      });
+
+      // 자격증명 입력 필드에 blur 이벤트 추가 - 모든 띄어쓰기 제거
+      document.getElementById("certName").addEventListener("blur", function() {
+        // 입력값에서 모든 공백 제거
+        this.value = this.value.replace(/\s+/g, "");
+      });
+
+      // 계좌번호 입력 필드에 blur 이벤트 추가 - 모든 하이픈 제거
+      document.getElementById("bankAccount").addEventListener("blur", function() {
+        // 입력값에서 모든 하이픈 제거
+        this.value = this.value.replace(/-/g, "");
+      });
+
+      //확인버튼, 취소버튼
+      let currentYesCallback = null;
+      let currentNoCallback = null;
+
+      document
+        .getElementById("confirmYesBtn")
+        .addEventListener("click", function () {
+          if (currentYesCallback) currentYesCallback();
+          closeModal("confirmModal");
+        });
+
+      document
+        .getElementById("confirmNoBtn")
+        .addEventListener("click", function () {
+          if (currentNoCallback) currentNoCallback();
+          closeModal("confirmModal");
+        });
+
+      window.showConfirm = function (message, yesCallback, noCallback) {
+        currentYesCallback = yesCallback;
+        currentNoCallback = noCallback;
+
+        document.getElementById("confirmModalMessage").textContent = message;
+        document.getElementById("confirmModal").style.display = "flex";
+      };
+
+      // 자격증 저장 버튼 클릭 이벤트
+      document
+        .getElementById("saveQualificationBtn")
+        .addEventListener("click", async function () {
+          try {
+            // 필수 입력 필드 확인
+            const certName = document.getElementById("certName").value.trim();
+            const certNumber = document
+              .getElementById("certNumber")
+              .value.trim();
+            const certDate = document.getElementById("certDate").value.trim();
+            const certExpiryDate = document
+              .getElementById("certExpiryDate")
+              .value.trim();
+            const certIssuer = document
+              .getElementById("certIssuer")
+              .value.trim();
+
+            // 직원 정보 확인
+            const employeeId = document
+              .getElementById("employeeId")
+              .value.trim();
+            const employeeName = document.getElementById("name").value.trim();
+
+            // 자격증명과 직원번호는 필수
+            if (!certName) {
+              showAlert("자격증명을 입력해주세요.");
+              return;
+            }
+
+            if (!employeeId) {
+              showAlert("직원을 먼저 선택해주세요.");
+              return;
+            }
+
+            if (employeeId === "신규직원등록중") {
+              showAlert("직원을 먼저 등록 후 자격사항을 추가해주세요.");
+              return;
+            }
+
+            // 로딩 표시 시작
+            showLoading();
+
+            // 폼 데이터 수집
+            const formData = {
+              employeeId: employeeId,
+              employeeName: employeeName,
+              certName: certName,
+              certNumber: certNumber,
+              certDate: certDate,
+              certExpiryDate: certExpiryDate,
+              certIssuer: certIssuer,
+            };
+
+            // await로 데이터 저장 처리
+            await append_CertLineData(formData);
+
+            // 입력 필드 초기화
+            document.getElementById("certName").value = "";
+            document.getElementById("certNumber").value = "";
+            document.getElementById("certDate").value = "";
+            document.getElementById("certExpiryDate").value = "";
+            document.getElementById("certIssuer").value = "";
+
+            // 자격증 데이터 다시 로드하여 최신 상태 반영
+            await loadCertData();
+
+            // 자격증 목록 새로고침
+            table_selectedEmployeeCert(employeeId);
+
+            // 로딩 표시 종료
+            hideLoading();
+
+            showAlert("자격증 정보가 저장되었습니다.");
+          } catch (error) {
+            // 오류 발생 시 로딩 표시 종료
+            hideLoading();
+            console.error("자격증 저장 중 오류:", error);
+            showAlert("자격증 저장 중 오류가 발생했습니다: " + error);
+          }
+        });
+    });
+
+    // DOMContentLoaded 이벤트 - 모달 관련 이벤트 리스너 설정
+    document.addEventListener("DOMContentLoaded", function() {
+      // 콜백 함수를 저장할 변수
+      window.currentYesCallback = null;
+      window.currentNoCallback = null;
+
+      // 모든 모달 닫기 버튼에 이벤트 리스너 추가
+      document.querySelectorAll(".modal-close").forEach(function(closeBtn) {
+        closeBtn.addEventListener("click", function() {
+          const modal = this.closest(".modal-overlay");
+          if (modal) {
+            closeModal(modal.id);
+          }
+        });
+      });
+
+      // 알림 모달 확인 버튼
+      document.getElementById("modalConfirmBtn").addEventListener("click", function() {
+        closeModal("customModal");
+      });
+
+      // 확인 모달 버튼들
+      document.getElementById("confirmYesBtn").addEventListener("click", function() {
+        if (currentYesCallback) currentYesCallback();
+        closeModal("confirmModal");
+      });
+
+      document.getElementById("confirmNoBtn").addEventListener("click", function() {
+        if (currentNoCallback) currentNoCallback();
+        closeModal("confirmModal");
+      });
+    });
+  </script>
+</html>
