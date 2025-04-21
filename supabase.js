@@ -14,6 +14,8 @@ function initSupabase() {
   }
 }
 
+window.supabase = initSupabase();
+
 // 페이지 로드 완료 시 Supabase 초기화
 document.addEventListener('DOMContentLoaded', initSupabase);
 
