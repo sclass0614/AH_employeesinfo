@@ -12,7 +12,6 @@
 
     <!-- 인증 & 경로 검사 -->
     <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script>
-    
   </head>
 
   <body>
@@ -44,7 +43,9 @@
             전직원 조회
           </button>
         </div>
-        <button class="btn" id="newEmployeeBtn">신규직원등록</button>
+        <div class="search-area">
+          <button class="btn">신규직원등록</button>
+        </div>
       </div>
 
       <div class="content-wrapper" id="contentArea">
@@ -220,7 +221,7 @@
                       <option value="시간강사">시간강사</option>
                       <option value="기타프리랜서">기타프리랜서</option>
                       <option value="자원봉사자">자원봉사자</option>
-                      </select>
+                    </select>
                   </div>
                   <div class="col-2">
                     <label class="form-label">담당직종</label>
@@ -622,7 +623,6 @@
   </body>
 
   <script>
-      
     // 전역 변수
     let employeeData = []; // 직원 데이터 저장
     let certData = []; // 자격증 데이터 저장
@@ -672,7 +672,7 @@
 
       // 메시지 설정
       document.getElementById("confirmModalMessage").textContent = message;
-      
+
       // 모달 표시
       openModal("confirmModal");
     }
@@ -683,21 +683,20 @@
       try {
         // Supabase 초기화 (추가)
         initSupabase();
-        
+
         // 모든 데이터 로드
         await loadAllData();
-        
+
         // 자격증 데이터 로드 추가
         await loadCertData();
-        
+
         // 현재 날짜를 기준일자로 설정
         const today = new Date();
-        const dateStr = today.toISOString().split('T')[0];
+        const dateStr = today.toISOString().split("T")[0];
         document.getElementById("referenceDate").value = dateStr;
-        
+
         // 재직 중인 직원 테이블 표시
         table_CurrentEmployee();
-        
       } catch (error) {
         console.error("초기화 중 오류 발생:", error);
         showAlert("데이터 로드 중 오류가 발생했습니다.");
@@ -725,8 +724,6 @@
       });
     }
 
-    
-
     // (구분)직원 데이터 이동 함수 정의
     function move_EmployeeLineData() {
       // Promise를 반환하도록 구현
@@ -742,12 +739,12 @@
 
         // 로딩 표시 시작
         showLoading();
-        
+
         // Supabase 함수 호출
         move_EmployeeLine(employeeId)
-          .then(result => {
+          .then((result) => {
             hideLoading(); // 로딩 표시 종료
-            
+
             if (result.success) {
               resolve(result);
             } else {
@@ -755,7 +752,7 @@
               reject(result.message);
             }
           })
-          .catch(error => {
+          .catch((error) => {
             hideLoading(); // 로딩 표시 종료
             showAlert("직원 데이터 이동 중 오류가 발생했습니다: " + error);
             reject(error);
@@ -776,34 +773,37 @@
           certExpiryDate: document.getElementById("certExpiryDate").value,
           certIssuer: document.getElementById("certIssuer").value,
         };
-        
+
         // 필수 필드 검증
         if (!formData.certName) {
           return { success: false, message: "자격증명을 입력해주세요." };
         }
-        
+
         // Supabase 함수를 사용하여 자격증 데이터 처리
         const result = await processCertFormData(formData);
-        
+
         if (result.success) {
           // 성공 시 자격증 테이블 업데이트
           await loadCertData();
           updateCertTable();
-          
+
           // 입력 필드 초기화
           document.getElementById("certName").value = "";
           document.getElementById("certNumber").value = "";
           document.getElementById("certDate").value = "";
           document.getElementById("certExpiryDate").value = "";
           document.getElementById("certIssuer").value = "";
-          
+
           return { success: true, message: result.message };
         } else {
           return { success: false, message: result.message };
         }
       } catch (error) {
         console.error("자격증 데이터 저장 중 오류 발생:", error);
-        return { success: false, message: "자격증 데이터 저장 중 오류가 발생했습니다: " + error };
+        return {
+          success: false,
+          message: "자격증 데이터 저장 중 오류가 발생했습니다: " + error,
+        };
       }
     }
 
@@ -833,7 +833,7 @@
 
         // supabase.js의 deleteCertData 함수 호출
         deleteCertData_Supabase(certId)
-          .then(result => {
+          .then((result) => {
             hideLoading(); // 로딩 표시 종료
 
             if (result.success) {
@@ -843,7 +843,7 @@
               reject(result.message); // Promise 실패 처리
             }
           })
-          .catch(error => {
+          .catch((error) => {
             hideLoading(); // 로딩 표시 종료
             showAlert("자격증 삭제 중 오류가 발생했습니다: " + error);
             reject(error); // Promise 실패 처리
@@ -866,7 +866,11 @@
       }
 
       // 현재 표시 중인 테이블 데이터 다시 정렬하고 표시
-      if (document.getElementById("employeeListTitle").textContent.includes("재직")) {
+      if (
+        document
+          .getElementById("employeeListTitle")
+          .textContent.includes("재직")
+      ) {
         table_CurrentEmployee();
       } else {
         table_AllEmployee();
@@ -905,119 +909,119 @@
       console.log("첫 번째 데이터 항목:", storedData_all[0]);
 
       // 조건에 맞는 직원만 필터링하여 배열에 저장
-      const filteredEmployees = storedData_all.filter(row => {
+      const filteredEmployees = storedData_all.filter((row) => {
         // contractStart와 contractEnd가 이미 숫자형식이거나 문자열 형식인지 확인
         let startDateNum, endDateNum;
-        
+
         // Supabase 데이터의 필드명이 한글로 되어있음 (계약시작일, 계약종료일)
         // 1. 이미 숫자인 경우
-        if (typeof row.계약시작일 === 'number') {
+        if (typeof row.계약시작일 === "number") {
           startDateNum = row.계약시작일;
-        } 
+        }
         // 2. 문자열인 경우 (YYYY-MM-DD 형식)
-        else if (row.계약시작일 && String(row.계약시작일).includes('-')) {
+        else if (row.계약시작일 && String(row.계약시작일).includes("-")) {
           startDateNum = parseInt(String(row.계약시작일).replace(/-/g, ""));
-        } 
+        }
         // 3. 문자열이지만 이미 숫자 형식인 경우 (YYYYMMDD 형식)
         else if (row.계약시작일) {
           startDateNum = parseInt(row.계약시작일);
-        }
-        else {
+        } else {
           startDateNum = 0;
         }
-        
+
         // 계약 종료일 처리
-        if (typeof row.계약종료일 === 'number') {
+        if (typeof row.계약종료일 === "number") {
           endDateNum = row.계약종료일;
-        } 
-        else if (row.계약종료일 && String(row.계약종료일).includes('-')) {
+        } else if (row.계약종료일 && String(row.계약종료일).includes("-")) {
           endDateNum = parseInt(String(row.계약종료일).replace(/-/g, ""));
-        } 
-        else if (row.계약종료일) {
+        } else if (row.계약종료일) {
           endDateNum = parseInt(row.계약종료일);
-        }
-        else {
+        } else {
           endDateNum = 99991231; // 아주 먼 미래 날짜
         }
-        
-        console.log(`직원 ${row.직원명 || 'N/A'}: 시작=${startDateNum}, 종료=${endDateNum}, 기준=${refDateNum}`);
-        
+
+        console.log(
+          `직원 ${
+            row.직원명 || "N/A"
+          }: 시작=${startDateNum}, 종료=${endDateNum}, 기준=${refDateNum}`
+        );
+
         // 기준일이 계약시작일보다 크거나 같고, 계약종료일보다 작은 경우에만 표시
         return refDateNum >= startDateNum && refDateNum < endDateNum;
       });
 
       console.log("필터링 후 직원 수:", filteredEmployees.length);
-      
+
       // 선택된 열과 방향에 따라 정렬
       filteredEmployees.sort((a, b) => {
         let valueA, valueB;
 
-        switch(currentSortColumn) {
-          case 'employeeId':
-            valueA = a.직원번호 || '';
-            valueB = b.직원번호 || '';
+        switch (currentSortColumn) {
+          case "employeeId":
+            valueA = a.직원번호 || "";
+            valueB = b.직원번호 || "";
             break;
-          case 'name':
-            valueA = a.직원명 || '';
-            valueB = b.직원명 || '';
+          case "name":
+            valueA = a.직원명 || "";
+            valueB = b.직원명 || "";
             break;
-          case 'jobType':
-            valueA = a.근무구분 || '';
-            valueB = b.근무구분 || '';
+          case "jobType":
+            valueA = a.근무구분 || "";
+            valueB = b.근무구분 || "";
             break;
-          case 'mobile':
-            valueA = a.휴대전화번호 || '';
-            valueB = b.휴대전화번호 || '';
+          case "mobile":
+            valueA = a.휴대전화번호 || "";
+            valueB = b.휴대전화번호 || "";
             break;
-          case 'startDate':
+          case "startDate":
             // 시작일 처리
-            if (typeof a.계약시작일 === 'number') {
+            if (typeof a.계약시작일 === "number") {
               valueA = a.계약시작일;
-            } else if (a.계약시작일 && String(a.계약시작일).includes('-')) {
+            } else if (a.계약시작일 && String(a.계약시작일).includes("-")) {
               valueA = parseInt(String(a.계약시작일).replace(/-/g, ""));
             } else {
               valueA = parseInt(a.계약시작일) || 0;
             }
-            
-            if (typeof b.계약시작일 === 'number') {
+
+            if (typeof b.계약시작일 === "number") {
               valueB = b.계약시작일;
-            } else if (b.계약시작일 && String(b.계약시작일).includes('-')) {
+            } else if (b.계약시작일 && String(b.계약시작일).includes("-")) {
               valueB = parseInt(String(b.계약시작일).replace(/-/g, ""));
             } else {
               valueB = parseInt(b.계약시작일) || 0;
             }
             break;
-          case 'endDate':
+          case "endDate":
             // 종료일 처리
-            if (typeof a.계약종료일 === 'number') {
+            if (typeof a.계약종료일 === "number") {
               valueA = a.계약종료일;
-            } else if (a.계약종료일 && String(a.계약종료일).includes('-')) {
+            } else if (a.계약종료일 && String(a.계약종료일).includes("-")) {
               valueA = parseInt(String(a.계약종료일).replace(/-/g, ""));
             } else {
               valueA = parseInt(a.계약종료일) || 0;
             }
-            
-            if (typeof b.계약종료일 === 'number') {
+
+            if (typeof b.계약종료일 === "number") {
               valueB = b.계약종료일;
-            } else if (b.계약종료일 && String(b.계약종료일).includes('-')) {
+            } else if (b.계약종료일 && String(b.계약종료일).includes("-")) {
               valueB = parseInt(String(b.계약종료일).replace(/-/g, ""));
             } else {
               valueB = parseInt(b.계약종료일) || 0;
             }
             break;
           default:
-            valueA = a.직원번호 || '';
-            valueB = b.직원번호 || '';
+            valueA = a.직원번호 || "";
+            valueB = b.직원번호 || "";
         }
 
         // 문자열인 경우 대소문자 구분 없이 비교
-        if (typeof valueA === 'string' && typeof valueB === 'string') {
+        if (typeof valueA === "string" && typeof valueB === "string") {
           valueA = valueA.toLowerCase();
           valueB = valueB.toLowerCase();
         }
 
         // 정렬 방향에 따라 비교
-        if (sortDirection === 'asc') {
+        if (sortDirection === "asc") {
           return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
         } else {
           return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
@@ -1026,24 +1030,30 @@
 
       // 정렬된 데이터를 테이블에 추가
       filteredEmployees.forEach((row) => {
-        const employeeNo = row.직원번호; 
+        const employeeNo = row.직원번호;
         const employeeName = row.직원명;
         const jobType = row.담당직종;
         const mobile = row.휴대전화번호;
-        
+
         // 날짜 데이터 포맷팅 (숫자 -> YYYY-MM-DD)
         let contractStartDate, contractEndDate;
-        
-        if (typeof row.계약시작일 === 'number') {
+
+        if (typeof row.계약시작일 === "number") {
           const startStr = row.계약시작일.toString();
-          contractStartDate = `${startStr.substring(0, 4)}-${startStr.substring(4, 6)}-${startStr.substring(6, 8)}`;
+          contractStartDate = `${startStr.substring(0, 4)}-${startStr.substring(
+            4,
+            6
+          )}-${startStr.substring(6, 8)}`;
         } else {
           contractStartDate = row.계약시작일 || "";
         }
-        
-        if (typeof row.계약종료일 === 'number') {
+
+        if (typeof row.계약종료일 === "number") {
           const endStr = row.계약종료일.toString();
-          contractEndDate = `${endStr.substring(0, 4)}-${endStr.substring(4, 6)}-${endStr.substring(6, 8)}`;
+          contractEndDate = `${endStr.substring(0, 4)}-${endStr.substring(
+            4,
+            6
+          )}-${endStr.substring(6, 8)}`;
         } else {
           contractEndDate = row.계약종료일 || "";
         }
@@ -1080,7 +1090,7 @@
           document.getElementById("submitBtn").disabled = true;
 
           // 선택된 직원 ID 저장
-          selectedMemberId = row.직원등록_id; 
+          selectedMemberId = row.직원등록_id;
 
           // 데이터를 각 탭에 표시
           fillEmployeeData(row);
@@ -1088,7 +1098,8 @@
       });
 
       // 테이블 제목 업데이트
-      document.getElementById("employeeListTitle").textContent = "재직 직원 목록";
+      document.getElementById("employeeListTitle").textContent =
+        "재직 직원 목록";
       console.log("테이블 데이터 처리 완료");
     }
 
@@ -1108,77 +1119,77 @@
 
       // 데이터 복사
       const allEmployees = [...storedData_all];
-      
+
       // 선택된 열과 방향에 따라 정렬
       allEmployees.sort((a, b) => {
         let valueA, valueB;
 
-        switch(currentSortColumn) {
-          case 'employeeId':
-            valueA = a.직원번호 || '';
-            valueB = b.직원번호 || '';
+        switch (currentSortColumn) {
+          case "employeeId":
+            valueA = a.직원번호 || "";
+            valueB = b.직원번호 || "";
             break;
-          case 'name':
-            valueA = a.직원명 || '';
-            valueB = b.직원명 || '';
+          case "name":
+            valueA = a.직원명 || "";
+            valueB = b.직원명 || "";
             break;
-          case 'jobType':
-            valueA = a.근무구분 || '';
-            valueB = b.근무구분 || '';
+          case "jobType":
+            valueA = a.근무구분 || "";
+            valueB = b.근무구분 || "";
             break;
-          case 'mobile':
-            valueA = a.휴대전화번호 || '';
-            valueB = b.휴대전화번호 || '';
+          case "mobile":
+            valueA = a.휴대전화번호 || "";
+            valueB = b.휴대전화번호 || "";
             break;
-          case 'startDate':
+          case "startDate":
             // 시작일 처리
-            if (typeof a.계약시작일 === 'number') {
+            if (typeof a.계약시작일 === "number") {
               valueA = a.계약시작일;
-            } else if (a.계약시작일 && String(a.계약시작일).includes('-')) {
+            } else if (a.계약시작일 && String(a.계약시작일).includes("-")) {
               valueA = parseInt(String(a.계약시작일).replace(/-/g, ""));
             } else {
               valueA = parseInt(a.계약시작일) || 0;
             }
-            
-            if (typeof b.계약시작일 === 'number') {
+
+            if (typeof b.계약시작일 === "number") {
               valueB = b.계약시작일;
-            } else if (b.계약시작일 && String(b.계약시작일).includes('-')) {
+            } else if (b.계약시작일 && String(b.계약시작일).includes("-")) {
               valueB = parseInt(String(b.계약시작일).replace(/-/g, ""));
             } else {
               valueB = parseInt(b.계약시작일) || 0;
             }
             break;
-          case 'endDate':
+          case "endDate":
             // 종료일 처리
-            if (typeof a.계약종료일 === 'number') {
+            if (typeof a.계약종료일 === "number") {
               valueA = a.계약종료일;
-            } else if (a.계약종료일 && String(a.계약종료일).includes('-')) {
+            } else if (a.계약종료일 && String(a.계약종료일).includes("-")) {
               valueA = parseInt(String(a.계약종료일).replace(/-/g, ""));
             } else {
               valueA = parseInt(a.계약종료일) || 0;
             }
-            
-            if (typeof b.계약종료일 === 'number') {
+
+            if (typeof b.계약종료일 === "number") {
               valueB = b.계약종료일;
-            } else if (b.계약종료일 && String(b.계약종료일).includes('-')) {
+            } else if (b.계약종료일 && String(b.계약종료일).includes("-")) {
               valueB = parseInt(String(b.계약종료일).replace(/-/g, ""));
             } else {
               valueB = parseInt(b.계약종료일) || 0;
             }
             break;
           default:
-            valueA = a.직원번호 || '';
-            valueB = b.직원번호 || '';
+            valueA = a.직원번호 || "";
+            valueB = b.직원번호 || "";
         }
 
         // 문자열인 경우 대소문자 구분 없이 비교
-        if (typeof valueA === 'string' && typeof valueB === 'string') {
+        if (typeof valueA === "string" && typeof valueB === "string") {
           valueA = valueA.toLowerCase();
           valueB = valueB.toLowerCase();
         }
 
         // 정렬 방향에 따라 비교
-        if (sortDirection === 'asc') {
+        if (sortDirection === "asc") {
           return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
         } else {
           return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
@@ -1191,20 +1202,26 @@
         const employeeName = row.직원명;
         const jobType = row.담당직종;
         const mobile = row.휴대전화번호;
-        
+
         // 날짜 데이터 포맷팅 (숫자 -> YYYY-MM-DD)
         let contractStartDate, contractEndDate;
-        
-        if (typeof row.계약시작일 === 'number') {
+
+        if (typeof row.계약시작일 === "number") {
           const startStr = row.계약시작일.toString();
-          contractStartDate = `${startStr.substring(0, 4)}-${startStr.substring(4, 6)}-${startStr.substring(6, 8)}`;
+          contractStartDate = `${startStr.substring(0, 4)}-${startStr.substring(
+            4,
+            6
+          )}-${startStr.substring(6, 8)}`;
         } else {
           contractStartDate = row.계약시작일 || "";
         }
-        
-        if (typeof row.계약종료일 === 'number') {
+
+        if (typeof row.계약종료일 === "number") {
           const endStr = row.계약종료일.toString();
-          contractEndDate = `${endStr.substring(0, 4)}-${endStr.substring(4, 6)}-${endStr.substring(6, 8)}`;
+          contractEndDate = `${endStr.substring(0, 4)}-${endStr.substring(
+            4,
+            6
+          )}-${endStr.substring(6, 8)}`;
         } else {
           contractEndDate = row.계약종료일 || "";
         }
@@ -1223,22 +1240,25 @@
 
         // 행 배경색 설정 (계약 종료된 직원은 회색 배경)
         const today = new Date();
-        const formattedToday = today.toISOString().split("T")[0].replace(/-/g, "");
+        const formattedToday = today
+          .toISOString()
+          .split("T")[0]
+          .replace(/-/g, "");
         const todayNum = parseInt(formattedToday);
-        
+
         // contractEndDate를 숫자로 변환하여 오늘 날짜와 비교
         let endDateNum;
-        
-        if (typeof row.계약종료일 === 'number') {
+
+        if (typeof row.계약종료일 === "number") {
           endDateNum = row.계약종료일;
-        } else if (row.계약종료일 && String(row.계약종료일).includes('-')) {
+        } else if (row.계약종료일 && String(row.계약종료일).includes("-")) {
           endDateNum = parseInt(String(row.계약종료일).replace(/-/g, ""));
         } else if (row.계약종료일) {
           endDateNum = parseInt(row.계약종료일);
         } else {
           endDateNum = 99991231; // 아주 먼 미래 날짜
         }
-        
+
         // 계약이 종료된 직원은 회색 배경
         if (endDateNum <= todayNum) {
           newRow.style.backgroundColor = "#f0f0f0";
@@ -1258,7 +1278,7 @@
           document.getElementById("editBtn").disabled = false;
           document.getElementById("deleteBtn").disabled = false;
           document.getElementById("submitBtn").disabled = true;
-          
+
           // 선택된 직원 ID 저장
           selectedMemberId = row.직원등록_id;
 
@@ -1268,7 +1288,8 @@
       });
 
       // 테이블 제목 업데이트
-      document.getElementById("employeeListTitle").textContent = "전체 직원 목록";
+      document.getElementById("employeeListTitle").textContent =
+        "전체 직원 목록";
       console.log("전체 직원 데이터 처리 완료");
     }
 
@@ -1282,15 +1303,18 @@
       document.getElementById("employeeId").value = data.직원번호 || ""; // 직원번호
       document.getElementById("name").value = data.직원명 || ""; // 이름
       document.getElementById("ssn").value = data.주민등록번호 || ""; // 주민등록번호
-      
+
       // 생년월일 포맷팅 (숫자 -> YYYY-MM-DD)
-      if (typeof data.생년월일 === 'number') {
+      if (typeof data.생년월일 === "number") {
         const birthStr = data.생년월일.toString();
-        document.getElementById("birthdate").value = `${birthStr.substring(0, 4)}-${birthStr.substring(4, 6)}-${birthStr.substring(6, 8)}`;
+        document.getElementById("birthdate").value = `${birthStr.substring(
+          0,
+          4
+        )}-${birthStr.substring(4, 6)}-${birthStr.substring(6, 8)}`;
       } else {
         document.getElementById("birthdate").value = data.생년월일 || "";
       }
-      
+
       document.getElementById("age").value = data.만나이 || ""; // 만나이
       document.getElementById("address").value = data.주소 || ""; // 주소
       document.getElementById("email").value = data.이메일 || ""; // 이메일
@@ -1312,29 +1336,38 @@
       }
 
       // 계약일자 포맷팅
-      if (typeof data.계약일 === 'number') {
+      if (typeof data.계약일 === "number") {
         const dateStr = data.계약일.toString();
-        document.getElementById("contractDate").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        document.getElementById("contractDate").value = `${dateStr.substring(
+          0,
+          4
+        )}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
       } else {
         document.getElementById("contractDate").value = data.계약일 || "";
       }
-      
+
       // 계약시작일 포맷팅
-      if (typeof data.계약시작일 === 'number') {
+      if (typeof data.계약시작일 === "number") {
         const startStr = data.계약시작일.toString();
-        document.getElementById("contractStart").value = `${startStr.substring(0, 4)}-${startStr.substring(4, 6)}-${startStr.substring(6, 8)}`;
+        document.getElementById("contractStart").value = `${startStr.substring(
+          0,
+          4
+        )}-${startStr.substring(4, 6)}-${startStr.substring(6, 8)}`;
       } else {
         document.getElementById("contractStart").value = data.계약시작일 || "";
       }
-      
+
       // 계약종료일 포맷팅
-      if (typeof data.계약종료일 === 'number') {
+      if (typeof data.계약종료일 === "number") {
         const endStr = data.계약종료일.toString();
-        document.getElementById("contractEnd").value = `${endStr.substring(0, 4)}-${endStr.substring(4, 6)}-${endStr.substring(6, 8)}`;
+        document.getElementById("contractEnd").value = `${endStr.substring(
+          0,
+          4
+        )}-${endStr.substring(4, 6)}-${endStr.substring(6, 8)}`;
       } else {
         document.getElementById("contractEnd").value = data.계약종료일 || "";
       }
-      
+
       document.getElementById("workStart").value = data.근무시작시간 || ""; // 근무시작시간
       document.getElementById("workEnd").value = data.근무종료시간 || ""; // 근무종료시간
       document.getElementById("breakTime").value = data.휴게시간 || ""; // 휴게시간
@@ -1351,7 +1384,7 @@
 
       // 저장된 근무요일 가져오기
       const workdays = data.근무요일 || [];
-      
+
       // 근무요일이 배열인 경우
       if (Array.isArray(workdays)) {
         // 각 체크박스 설정
@@ -1374,11 +1407,11 @@
           workdayNone.checked = false;
           workdayNone.disabled = workdays.length > 0;
         }
-      } 
+      }
       // 근무요일이 문자열인 경우 (Supabase에서는 _로 구분된 문자열로 저장)
-      else if (typeof workdays === 'string') {
-        const workdaysArray = workdays.split('_');
-        
+      else if (typeof workdays === "string") {
+        const workdaysArray = workdays.split("_");
+
         // 각 체크박스 설정
         workdayCheckboxes.forEach((checkbox) => {
           if (workdaysArray.includes(checkbox.value)) {
@@ -1406,27 +1439,45 @@
 
       // 의무사항 탭 - 날짜 포맷팅
       // 건강검진일 포맷팅
-      if (typeof data.건강검진일 === 'number') {
+      if (typeof data.건강검진일 === "number") {
         const dateStr = data.건강검진일.toString();
-        document.getElementById("health_checkup_date").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        document.getElementById(
+          "health_checkup_date"
+        ).value = `${dateStr.substring(0, 4)}-${dateStr.substring(
+          4,
+          6
+        )}-${dateStr.substring(6, 8)}`;
       } else {
-        document.getElementById("health_checkup_date").value = data.건강검진일 || "";
+        document.getElementById("health_checkup_date").value =
+          data.건강검진일 || "";
       }
-      
+
       // 범죄경력일 포맷팅
-      if (typeof data.범죄경력조회일 === 'number') {
+      if (typeof data.범죄경력조회일 === "number") {
         const dateStr = data.범죄경력조회일.toString();
-        document.getElementById("criminal_record_check_date").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        document.getElementById(
+          "criminal_record_check_date"
+        ).value = `${dateStr.substring(0, 4)}-${dateStr.substring(
+          4,
+          6
+        )}-${dateStr.substring(6, 8)}`;
       } else {
-        document.getElementById("criminal_record_check_date").value = data.범죄경력조회일 || "";
+        document.getElementById("criminal_record_check_date").value =
+          data.범죄경력조회일 || "";
       }
-      
+
       // 치매교육일 포맷팅
-      if (typeof data.치매교육이수일 === 'number') {
+      if (typeof data.치매교육이수일 === "number") {
         const dateStr = data.치매교육이수일.toString();
-        document.getElementById("dementia_training_date").value = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        document.getElementById(
+          "dementia_training_date"
+        ).value = `${dateStr.substring(0, 4)}-${dateStr.substring(
+          4,
+          6
+        )}-${dateStr.substring(6, 8)}`;
       } else {
-        document.getElementById("dementia_training_date").value = data.치매교육이수일 || "";
+        document.getElementById("dementia_training_date").value =
+          data.치매교육이수일 || "";
       }
 
       // 자격증 테이블 표시
@@ -1436,7 +1487,7 @@
 
       // 일일근무시간 재계산
       calculateDailyHours();
-      
+
       // 계좌항목 탭
       document.getElementById("bankAccount").value = data.계좌번호 || ""; // 계좌번호
       document.getElementById("bankName").value = data.계좌은행 || ""; // 계좌은행
@@ -1515,10 +1566,12 @@
           deleteBtn.addEventListener("click", async function () {
             // certId가 비어있는지 확인
             if (!certId) {
-              showAlert("자격증 ID가 없습니다. 자격증 데이터를 다시 로드해주세요.");
+              showAlert(
+                "자격증 ID가 없습니다. 자격증 데이터를 다시 로드해주세요."
+              );
               return;
             }
-            
+
             showConfirm(
               "이 자격증 정보를 삭제하시겠습니까?",
               async function () {
@@ -1562,7 +1615,7 @@
 
         // supabase.js의 deleteCertData 함수 호출
         deleteCertData_Supabase(certId)
-          .then(result => {
+          .then((result) => {
             hideLoading(); // 로딩 표시 종료
 
             if (result.success) {
@@ -1572,7 +1625,7 @@
               reject(result.message); // Promise 실패 처리
             }
           })
-          .catch(error => {
+          .catch((error) => {
             hideLoading(); // 로딩 표시 종료
             showAlert("자격증 삭제 중 오류가 발생했습니다: " + error);
             reject(error); // Promise 실패 처리
@@ -1895,7 +1948,7 @@
       document.getElementById("mobile").value = "";
       document.getElementById("phone").value = "";
       document.getElementById("emergency").value = "";
-      
+
       // 계좌 정보 입력 필드 초기화
       document.getElementById("bankAccount").value = "";
       document.getElementById("bankName").value = "";
@@ -2024,13 +2077,13 @@
         try {
           // 로딩 표시
           showLoading();
-          
+
           // Supabase 함수 호출
           const result = await processCertFormData(certData);
-          
+
           // 로딩 숨기기
           hideLoading();
-          
+
           if (result.success) {
             resolve(result); // Promise 성공 처리
           } else {
@@ -2078,9 +2131,14 @@
           workdays: workdaysArray,
           dailyHours: document.getElementById("dailyHours").value,
           otherWorkType: document.getElementById("otherWorkType").value,
-          healthCheckupDate: document.getElementById("health_checkup_date").value,
-          criminalRecordDate: document.getElementById("criminal_record_check_date").value,
-          dementiaTrainingDate: document.getElementById("dementia_training_date").value,
+          healthCheckupDate: document.getElementById("health_checkup_date")
+            .value,
+          criminalRecordDate: document.getElementById(
+            "criminal_record_check_date"
+          ).value,
+          dementiaTrainingDate: document.getElementById(
+            "dementia_training_date"
+          ).value,
           bankAccount: document.getElementById("bankAccount").value,
           bankName: document.getElementById("bankName").value,
           accountHolder: document.getElementById("accountHolder").value,
@@ -2097,9 +2155,9 @@
 
         // Supabase 함수 호출
         processEmployeeFormData(formData)
-          .then(result => {
+          .then((result) => {
             hideLoading(); // 로딩 표시 종료
-            
+
             if (result.success) {
               // 성공 시 직원번호 업데이트
               if (result.employeeId) {
@@ -2111,7 +2169,7 @@
               reject(result.message); // Promise 실패 처리
             }
           })
-          .catch(error => {
+          .catch((error) => {
             hideLoading(); // 로딩 표시 종료
             showAlert("직원 데이터 저장 중 오류가 발생했습니다: " + error);
             reject(error); // Promise 실패 처리
@@ -2134,12 +2192,12 @@
 
         // 로딩 표시 시작
         showLoading();
-        
+
         // Supabase 함수 호출
         move_EmployeeLine(employeeId)
-          .then(result => {
+          .then((result) => {
             hideLoading(); // 로딩 표시 종료
-            
+
             if (result.success) {
               resolve(result);
             } else {
@@ -2147,7 +2205,7 @@
               reject(result.message);
             }
           })
-          .catch(error => {
+          .catch((error) => {
             hideLoading(); // 로딩 표시 종료
             showAlert("직원 데이터 이동 중 오류가 발생했습니다: " + error);
             reject(error);
@@ -2195,7 +2253,7 @@
     document.addEventListener("DOMContentLoaded", function () {
       // Supabase 초기화
       initSupabase();
-      
+
       // 페이지 로드 시 데이터 로드 및 테이블 표시
       initializeData();
 
@@ -2205,19 +2263,19 @@
       document.getElementById("submitBtn").disabled = false;
 
       // 테이블 헤더 클릭 이벤트 추가
-      const tableHeaders = document.querySelectorAll('#employeeTable th');
-      tableHeaders.forEach(header => {
-        header.addEventListener('click', function() {
-          const column = this.getAttribute('data-sort');
+      const tableHeaders = document.querySelectorAll("#employeeTable th");
+      tableHeaders.forEach((header) => {
+        header.addEventListener("click", function () {
+          const column = this.getAttribute("data-sort");
           sortTable(column);
         });
-        
+
         // 커서 스타일 추가
-        header.style.cursor = 'pointer';
+        header.style.cursor = "pointer";
       });
 
       // 테이블 헤더 스타일 추가
-      const style = document.createElement('style');
+      const style = document.createElement("style");
       style.innerHTML = `
         th.sort-asc::after {
           content: '';
@@ -2492,7 +2550,6 @@
           clearAllContents();
           // 기본 정보 탭으로 이동
           document.querySelector("#contractTabBtn").click();
-
         });
 
       // 삭제 버튼에 이벤트 리스너 추가
@@ -2508,26 +2565,26 @@
           // 확인 모달 표시
           showConfirm(
             "선택한 직원 정보를 삭제하시겠습니까? 삭제된 정보는 복구할 수 없습니다.",
-            async function() {
+            async function () {
               try {
                 showLoading(); // 로딩 표시 시작
-                
+
                 // 직원 데이터를 OUTDATED 테이블로 이동
                 const result = await move_EmployeeLine(selectedMemberId);
-                
+
                 hideLoading(); // 로딩 표시 종료
-                
+
                 if (result.success) {
                   // 성공 시 데이터 갱신 및 폼 초기화
                   await loadAllData();
                   table_CurrentEmployee();
                   clearAllContents();
-                  
+
                   // 버튼 상태 변경
                   document.getElementById("editBtn").disabled = true;
                   document.getElementById("deleteBtn").disabled = true;
                   document.getElementById("submitBtn").disabled = false;
-                  
+
                   showAlert("직원 정보가 성공적으로 삭제되었습니다.");
                 } else {
                   showAlert(result.message || "삭제 중 오류가 발생했습니다.");
@@ -2691,16 +2748,18 @@
       });
 
       // 자격증명 입력 필드에 blur 이벤트 추가 - 모든 띄어쓰기 제거
-      document.getElementById("certName").addEventListener("blur", function() {
+      document.getElementById("certName").addEventListener("blur", function () {
         // 입력값에서 모든 공백 제거
         this.value = this.value.replace(/\s+/g, "");
       });
 
       // 계좌번호 입력 필드에 blur 이벤트 추가 - 모든 하이픈 제거
-      document.getElementById("bankAccount").addEventListener("blur", function() {
-        // 입력값에서 모든 하이픈 제거
-        this.value = this.value.replace(/-/g, "");
-      });
+      document
+        .getElementById("bankAccount")
+        .addEventListener("blur", function () {
+          // 입력값에서 모든 하이픈 제거
+          this.value = this.value.replace(/-/g, "");
+        });
 
       //확인버튼, 취소버튼
       let currentYesCallback = null;
@@ -2812,14 +2871,14 @@
     });
 
     // DOMContentLoaded 이벤트 - 모달 관련 이벤트 리스너 설정
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       // 콜백 함수를 저장할 변수
       window.currentYesCallback = null;
       window.currentNoCallback = null;
 
       // 모든 모달 닫기 버튼에 이벤트 리스너 추가
-      document.querySelectorAll(".modal-close").forEach(function(closeBtn) {
-        closeBtn.addEventListener("click", function() {
+      document.querySelectorAll(".modal-close").forEach(function (closeBtn) {
+        closeBtn.addEventListener("click", function () {
           const modal = this.closest(".modal-overlay");
           if (modal) {
             closeModal(modal.id);
@@ -2828,20 +2887,26 @@
       });
 
       // 알림 모달 확인 버튼
-      document.getElementById("modalConfirmBtn").addEventListener("click", function() {
-        closeModal("customModal");
-      });
+      document
+        .getElementById("modalConfirmBtn")
+        .addEventListener("click", function () {
+          closeModal("customModal");
+        });
 
       // 확인 모달 버튼들
-      document.getElementById("confirmYesBtn").addEventListener("click", function() {
-        if (currentYesCallback) currentYesCallback();
-        closeModal("confirmModal");
-      });
+      document
+        .getElementById("confirmYesBtn")
+        .addEventListener("click", function () {
+          if (currentYesCallback) currentYesCallback();
+          closeModal("confirmModal");
+        });
 
-      document.getElementById("confirmNoBtn").addEventListener("click", function() {
-        if (currentNoCallback) currentNoCallback();
-        closeModal("confirmModal");
-      });
+      document
+        .getElementById("confirmNoBtn")
+        .addEventListener("click", function () {
+          if (currentNoCallback) currentNoCallback();
+          closeModal("confirmModal");
+        });
     });
   </script>
 </html>

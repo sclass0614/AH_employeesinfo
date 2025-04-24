@@ -402,7 +402,7 @@ th {
     gap: 0.5rem;
     flex-wrap: nowrap;
     min-height: 3.75rem;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .search-area {
@@ -437,8 +437,9 @@ th {
     white-space: nowrap;
     min-height: auto;
     min-width: auto;
-    width: 7rem;
-    flex-shrink: 0;
+    width: 8rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 /* 모든 max-width: 48rem 이하의 미디어 쿼리 삭제 */
@@ -477,6 +478,9 @@ th {
     display: flex;
     align-items: center;
     gap: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
 }
 
 /* 조회 기준일 필드 스타일 */
