@@ -410,6 +410,8 @@ th {
     align-items: center;
     gap: 0.5rem;
     flex-wrap: nowrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .reference-date-container {
@@ -479,8 +481,19 @@ th {
     align-items: center;
     gap: 1rem;
     overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 0;
+}
 
+.enroll-button {
+    display: flex;
+    width: 8rem;
+    min-width: auto;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
 }
 
 /* 조회 기준일 필드 스타일 */
