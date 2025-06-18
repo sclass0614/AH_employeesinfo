@@ -125,15 +125,15 @@ textarea {
     width: 55%;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow-y: hidden;
+    height: auto;
+    overflow: visible;
 }
 
 #employeeForm {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
+    height: auto;
+    overflow: visible;
 }
 
 /* 정보 섹션 제목 스타일 */
@@ -291,9 +291,9 @@ th {
     padding: 0.5rem 0.5rem 0rem 0.5rem;
     margin-bottom: 1rem;
     background-color: white;
-    overflow: auto;
+    overflow: visible;
     height: auto;
-    flex: 1;
+    flex: none;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -303,9 +303,9 @@ th {
     padding: 0.5rem 0.5rem 0rem 0.5rem;
     margin-bottom: 0;
     background-color: white;
-    overflow: auto;
+    overflow: visible;
     height: auto;
-    flex: 1;
+    flex: none;
     display: flex;
     flex-direction: column;
 }
@@ -545,8 +545,8 @@ th {
     padding: 0;
     background-color: white;
     height: auto;
-    flex: 1;
-    overflow-y: auto;
+    flex: none;
+    overflow: visible;
 }
 
 .tab-content.active {
@@ -568,12 +568,12 @@ th {
 
     /* 컨테이너 및 레이아웃 */
     .container {
-        height: 100%;
+        height: auto;
     }
 
     .content-wrapper {
         flex-direction: column;
-        height: calc(100vh - 6rem);
+        height: auto;
         min-height: auto;
     }
 
@@ -587,6 +587,7 @@ th {
     /* 직원 폼 */
     .employee-form-container {
         width: 100%;
+        height: auto;
     }
 
     /* 행 레이아웃 */
